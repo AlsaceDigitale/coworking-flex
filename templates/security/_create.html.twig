@@ -1,0 +1,61 @@
+{{ form_start(form) }}
+<div class="row">
+    <div class="col-6">
+        {{ form_row(form.lastname, {'attr' : {'placeholder' : 'Nom'}}) }}
+    </div>
+    <div class="col-6">
+        {{ form_row(form.firstname, {'attr' : {'placeholder' : 'Prénom'}}) }}
+    </div>
+</div>
+<div class="row">
+    <div class="col-6">
+        {{ form_row(form.society, {'attr' : {'placeholder' : 'Société'}}) }}
+    </div>
+    <div class="col-6">
+        {{ form_row(form.country, {'attr' : {'placeholder' : 'Pays'}}) }}
+    </div>
+</div>
+<div>
+    {{ form_row(form.address, {'attr' : {'placeholder' : 'Adresse'}}) }}
+</div>
+<div class="row">
+    <div class="col-6">
+        {{ form_row(form.zip, {'attr' : {'placeholder' : 'Code postal'}}) }}
+    </div>
+    <div class="col-6">
+        {{ form_row(form.city, {'attr' : {'placeholder' : 'Ville'}}) }}
+    </div>
+</div>
+<div class="row">
+    <div class="col-6">
+        {{ form_row(form.phone, {'attr' : {'placeholder' : 'Téléphone'}}) }}
+    </div>
+    <div class="col-6">
+        {{ form_row(form.mail, {'attr': {'placeholder': 'Email'}}) }}
+    </div>
+</div>
+<hr>
+<div class="row">
+    <div class="col-12 col-md-6">
+        {{ form_row(form.username, {'attr' : {'placeholder' : 'Pseudo'}}) }}
+        <div>
+            <input id="check" type="checkbox" required aria-label="Cocher pour accepter les CGU">
+            <label for="check">Cocher la case pour accepter les CGU.</label>
+            <label for="">Lire les <a href="../../assets/images/CGU.pdf" target="_blank"><strong class="text-danger">CGU</strong>  </a></label>
+        </div>
+    </div>
+    <div class="col-12 col-md-6">
+        {{ form_row(form.password, {'attr' : {'placeholder' : 'Mot de passe'}}) }}
+        {{ form_row(form.confirm_password, {'attr' : {'placeholder' : 'Confirmation'}}) }}
+    </div>
+</div>
+<small id="formText" class="form-text text-muted">Nous ne partagerons jamais vos informations. <br> Toutes les informations sont obligatoires et les CGU doivent êtres acceptées pour s'inscrire et utiliser l'espace Flex.</small>
+<div class="modal-footer">
+    <div class="container">
+        <div class="row justify-content-between">
+            <button class="btn btn-outline-danger" type="button" data-dismiss="modal">Fermer</button>
+            <button class="btn btn-success formRegistration" type="submit">S'inscrire</button>
+        </div>
+    </div>
+</div>
+{{ form_end(form) }}

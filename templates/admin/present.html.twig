@@ -1,0 +1,61 @@
+{% extends 'admin_base.html.twig' %}
+
+{% block title %}Utilisateur(s) présent(s){% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+
+
+
+{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <h1 class="text-primary" style="text-align: center">Personnes actuellement présentes dans l'espace Flex</h1>
+
+        <table id="table_id" class="display">
+            <thead>
+            <tr class="text-primary">
+
+                <th >Nom</th>
+                <th>Prénom</th>
+                <th>Pseudo</th>
+                <th>Mail</th>
+
+            </tr>
+            </thead>
+            <tbody>
+
+            {% for checkin in checkins %}
+
+            <tr>
+
+                <td>{{ checkin.customer.lastname }}</td>
+                <td>{{ checkin.customer.firstname }}</td>
+                <td>{{ checkin.customer.username }}</td>
+                <td>{{ checkin.customer.mail }}</td>
+
+            </tr>
+
+            {% endfor %}
+
+
+
+
+            </tbody>
+        </table>
+
+        <a href="{{ path('admin_home') }}" class="btn btn-primary btn-lg active mb-5" role="button" aria-pressed="true">Retour</a>
+    </div>
+
+
+
+{% endblock %}
+
+{% block javascripts %}
+
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.18/js/dataTables.bootstrap4.min.js"></script>
+    <script type="text/javascript" src="../../assets/js/datatable.js"></script>
+{% endblock %}
+

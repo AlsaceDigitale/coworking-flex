@@ -1,0 +1,98 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Accueil{% endblock %}
+
+{% block body %}
+
+
+    <div class="container">
+        {% if subscription.active %}
+            <meta http-equiv="refresh" content="30; url={{ path('security_logout') }}">
+            {% for message in app.flashes('bye') %}
+                <div class="alert alert-dismissible alert-primary">
+                    <button class="close" type="button" data-dismiss="alert">&times;</button>
+                    <strong>{{ message }}{{ app.user.firstname }} ! =)</strong>
+                </div>
+            {% endfor %}
+            {% for message in app.flashes('arrival') %}
+                <div class="alert alert-dismissible alert-primary">
+                    <button class="close" type="button" data-dismiss="alert">&times;</button>
+                    <strong>{{ message }}{{ app.user.firstname }} ! =)</strong>
+                </div>
+            {% endfor %}
+
+            {% if count is defined and count | date('i') > 0 %}
+            <div class="row justify-content-center">
+                <div>
+                    <p>Vous êtes présent depuis <strong>
+                            {% if count | date('H') > 0 %}
+                                {{ count | date('H') }} heure(s) et
+                            {% endif %}
+                            {{ count | date('i') }} minute(s) </strong></p>
+                </div>
+            </div>
+            {% endif %}
+            <div class="row justify-content-center">
+                <strong id="demo" class="text-primary col-12 mb-3" align="center"></strong>
+                <div class="col-sm-3">
+                    <div>
+                        <button onclick="window.location.href='{{ path('user_checkin') }}'"
+                        class="btn btn-block {% if checkin or place <=0 %}btn-secondary disabled{% else %}btn-primary{% endif %} mb-3
+                        " {% if checkin  or place <=0 %}disabled{% endif %}>J'arrive</button>
+                    </div>
+                    <div>
+                        <button onclick="window.location.href='{{ path('user_checkout') }}'"
+                        class="btn btn-block {% if not checkin %}btn-secondary disabled{% else %}btn-primary{% endif %} mb-3
+                        " {% if not checkin %}disabled{% endif %}>Je pars</button>
+                    </div>
+                    <div>
+                        <button onclick="window.location.href='{{ path('user_account') }}'"
+                                class="btn btn-block btn-primary mb-3">Mon profil</button>
+                    </div>
+                    <div>
+                        <button onclick="window.location.href='{{ path('security_logout') }}'"
+                                class="btn btn-block btn-danger">Se déconnecter</button>
+                    </div>
+                </div>
+            </div>
+            <hr class="mt-5 mb-5">
+        {% else %}
+            <meta http-equiv="refresh" content="10; url={{ path('security_logout') }}">
+            <div class="alert alert-danger">
+                <h4 class="alert-heading">Attention, baignade interdite !</h4>
+                <p>Veuillez contacter le maître nageur*.</p>
+                <small id="formText" class="form-text text-muted">*L'administrateur.</small>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="container mt-5">
+        <div class="text-center">
+            <p>Il reste <strong>{{ place }}</strong> place(s) dans l'espace Flex, ce nombre de places est susceptible de changer très rapidement.</p>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+    <script>
+        // Set the date we're counting down to
+        var countDownDate = new Date().getTime();
+
+        // Update the count down every 1 second
+        var x = setInterval(function() {
+
+            // Get todays date and time
+            var now = new Date().getTime();
+
+            // Find the distance between now and the count down date
+            var distance = 31000 - (now - countDownDate);
+
+            // Time calculations for days, hours, minutes and seconds
+
+            var seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+            // Output the result in an element with id="demo"
+            document.getElementById("demo").innerHTML ="Vous allez être déconnecté dans  " + seconds + " secondes ";
+        }, 0);
+    </script>
+{% endblock %}

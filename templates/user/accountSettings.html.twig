@@ -1,0 +1,148 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Option de compte{% endblock %}
+
+{% block body %}
+
+    {% if app.user %}
+
+        <div class="container">
+
+            <div class="row justify-content-around">
+                <h1 class="mb-5 text-primary">Paramètres de compte</h1>
+                <a href="{{ path('user_account') }}"><button type="button" class="btn btn-primary m-2">Retour</button></a>
+            </div>
+
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-12 col-md-6">
+                        {% for message in app.flashes('CustomerSettingsValid') %}
+                            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                                <strong>{{ message }}</strong>
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                        {% endfor %}
+                        {% for message in app.flashes('CustomerSettingsError') %}
+                            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <strong>{{ message }}</strong>
+                                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="row justify-content-center mb-5">
+                <div class="col-12 col-md-6">
+                    <div class="accordion" id="accordion">
+                        <div class="card">
+                            <div class="card-header" align="center"  data-toggle="collapse" data-target="#collapseAccount"  id="acount">
+                                <h5 class="mb-0">
+                                    <div class="text-primary" type="text"aria-expanded="true" aria-controls="collapseAccount">
+                                        <img class="mr-2" src="../../assets/images/users.png" alt="Checkin"><strong>Mon profil</strong>
+                                    </div>
+                                </h5>
+                            </div>
+
+                            <div id="collapseAccount" class="collapse show" aria-labelledby="acount" data-parent="#accordion">
+                                <div class="card-body text-primary">
+                                    {{ form_start(formProfile) }}
+                                    <div class="row justify-content-center">
+                                        <div class="col-6">
+                                            <p>Nom</p>
+                                            <p class="text-dark">{{ app.user.lastname }}</p>
+                                        </div>
+                                        <div class="col-6">
+                                            <p>Prénom</p>
+                                            <p class="text-dark">{{ app.user.firstname }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="row justify-content-center">
+                                        <div class="col-6">
+                                            {{ form_row(formProfile.society, {'attr' : {'placeholder' : 'Société'}}) }}
+                                        </div>
+                                        <div class="col-6">
+                                            {{ form_row(formProfile.country, {'attr' : {'placeholder' : 'Pays'}}) }}
+                                        </div>
+                                    </div>
+                                    {{ form_row(formProfile.address, {'attr' : {'placeholder' : 'Adresse'}}) }}
+                                    <div class="row justify-content-center">
+                                        <div class="col-6">
+                                            {{ form_row(formProfile.zip, {'attr' : {'placeholder' : 'Code postal'}}) }}
+                                        </div>
+                                        <div class="col-6">
+                                            {{ form_row(formProfile.city, {'attr' : {'placeholder' : 'Ville'}}) }}
+                                        </div>
+                                    </div>
+                                    {{ form_row(formProfile.phone, {'attr' : {'placeholder' : 'Téléphone'}}) }}
+                                    <button class="btn btn-primary" type="submit">Enregistrer</button>
+                                    {{ form_end(formProfile) }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header" id="password" data-target="#collapsePassword" data-toggle="collapse" align="center" >
+                                <h5 class="mb-0">
+                                    <div class="text-primary" aria-expanded="false" aria-controls="collapsePassword">
+                                        <img class="mr-2" src="../../assets/images/shield.png" alt="Checkin"><strong>Mon Compte</strong>
+                                    </div>
+                                </h5>
+                            </div>
+                            <div id="collapsePassword" class="collapse" aria-labelledby="password" data-parent="#accordion">
+                                <div class="card-body text-primary">
+                                    {{ form_start(formAccount) }}
+
+                                    <p>Nom d'utilisateur</p>
+                                    <p class="text-dark">{{ app.user.username }}</p>
+
+                                    {{ form_row(formAccount.mail, {'attr' : {'placeholder' : 'E-mail'}}) }}
+
+                                    <button class="btn btn-primary" type="submit">Enregistrer</button>
+
+                                    {{ form_end(formAccount) }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card">
+                            <div class="card-header" id="profil" data-toggle="collapse" data-target="#collapseProfil" align="center">
+                                <h5 class="mb-0">
+                                    <div class="text-primary" aria-expanded="false" aria-controls="collapseProfil">
+                                        <img class="mr-2" src="../../assets/images/key.png" alt="Checkin"><strong>Mot de passe</strong>
+                                    </div>
+                                </h5>
+                            </div>
+                            <div id="collapseProfil" class="collapse" aria-labelledby="profil" data-parent="#accordion">
+                                <div class="card-body text-primary">
+                                    {{ form_start(formPassword) }}
+                                    <div class="row justify-content-center">
+                                        <div class="col-6">
+                                            {{ form_row(formPassword.old_password, {'attr' : {'placeholder' : 'Ancien mot de passe'}}) }}
+                                        </div>
+                                        <div class="col-6">
+                                            {{ form_row(formPassword.password, {'attr' : {'placeholder' : 'Nouveau mot de passe'}}) }}
+                                            {{ form_row(formPassword.confirm_password, {'attr' : {'placeholder' : 'Confirmation du mot de passe'}}) }}
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-primary" type="submit">Enregistrer</button>
+                                    {{ form_end(formPassword) }}
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+
+
+    {% endif %}
+
+{% endblock %}

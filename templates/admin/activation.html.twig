@@ -1,0 +1,63 @@
+{% extends 'admin_base.html.twig' %}
+
+{% block title %}Activation{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+
+
+
+{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <h1 class="text-primary" style="text-align: center">Liste des profils inactifs</h1>
+
+        <table id="table_id" class="display text-center" align="center">
+            <thead>
+            <tr class="text-primary">
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Pseudo</th>
+                <th>Mail</th>
+                <th>Action</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            {% for subscription in subscriptions %}
+
+            <tr>
+
+                <td>{{ subscription.customer.lastname }}</td>
+                <td>{{ subscription.customer.firstname }}</td>
+                <td>{{ subscription.customer.username }}</td>
+                <td>{{ subscription.customer.mail }}</td>
+                <td>
+                    <a href="{{ path('admin_activate', {'id': subscription.customer.id }) }}" class="btn btn-success btn-lg active" role="button" aria-pressed="true">Activer</a>
+
+                </td>
+            </tr>
+
+            {% endfor %}
+
+
+
+
+            </tbody>
+        </table>
+
+        <a href="{{ path('admin_home') }}" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Retour</a>
+    </div>
+
+
+
+{% endblock %}
+
+{% block javascripts %}
+
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.18/js/dataTables.bootstrap4.min.js"></script>
+    <script type="text/javascript" src="../../assets/js/datatable.js"></script>
+{% endblock %}
+

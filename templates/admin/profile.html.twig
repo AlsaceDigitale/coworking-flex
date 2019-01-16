@@ -1,0 +1,75 @@
+{% extends 'admin_base.html.twig' %}
+
+{% block title %}Profil de {{ customer.username }}{% endblock %}
+
+
+{% block body %}
+    <div class="container">
+        <h1 class="text-primary mb-5 mt-5" style="text-align: center">Profil de {{ customer.username }}</h1>
+
+        <div class="row">
+            <div class="col-8">
+                <div class="jumbotron first">
+                    <div class="row">
+                        <div class="col-6">
+                            <h3 class="text-primary">Nom : </h3>
+                            <p class="mb-3 h5">{{ customer.lastname }}</p>
+                            <h3 class="text-primary">Prénom : </h3>
+                            <p class="mb-3 h5">{{ customer.firstname }}</p>
+                            <h3 class="text-primary">Téléphone : </h3>
+                            <p class="mb-3 h5">{{ customer.phone }}</p>
+                            <h3 class="text-primary">E-mail : </h3>
+                            <p class="mb-3 h5">{{ customer.mail }}</p>
+                            {% if customer.society != '' %}
+                                <h3 class="text-primary">Société : </h3>
+                                <p class="mb-3 h5">{{ customer.society }}</p>
+                            {% endif %}
+                        </div>
+                        <div class="col-6">
+                            <h3 class="text-primary">Pays : </h3>
+                            <p class="mb-3 h5">{{ customer.country }}</p>
+                            <h3 class="text-primary">Adresse : </h3>
+                            <p class="mb-3 h5">{{ customer.address }}</p>
+                            <h3 class="text-primary">Code postal : </h3>
+                            <p class="mb-3 h5">{{ customer.zip }}</p>
+                            <h3 class="text-primary">Ville : </h3>
+                            <p class="mb-3 h5">{{ customer.city }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="jumbotron first">
+                    {{ form_start(formPromo) }}
+                    <h3 class="text-primary text-center mb-3">Demi-journée offerte :</h3>
+                    {{ form_row(formPromo.counter, {'label':false, 'attr': {'class': 'col-4 offset-4'}}) }}
+                    <button type="submit" class="btn btn-success btn-lg col-4 offset-4">Changer</button>
+                    {{ form_end(formPromo) }}
+                </div>
+            </div>
+
+        </div>
+
+        <div class="row justify-content-around mb-5">
+            <a href="{{ path('admin_list') }}" class="btn btn-primary btn-lg col-3 active" role="button" aria-pressed="true">Retour</a>
+
+            {% if subscription.active == 0 %}
+                <a href="{{ path('admin_activate', {'id': customer.id }) }}" class="btn btn-success btn-lg active col-3" role="button" aria-pressed="true">Activer ce compte</a>
+            {% else %}
+                <a href="{{ path('admin_activate', {'id': customer.id }) }}" class="btn btn-danger btn-lg active col-3" role="button" aria-pressed="true">Désactiver ce compte</a>
+            {% endif %}
+
+            {% if customer.role == 'ROLE_USER' %}
+                <a href="{{ path('admin_switchrole', {'id': customer.id }) }}" class="btn btn-outline-warning btn-lg col-3 " role="button" aria-pressed="true">Basculer en Administrateur</a>
+            {% else %}
+                <a href="{{ path('admin_switchrole', {'id': customer.id }) }}" class="btn btn-danger btn-lg col-3 active" role="button" aria-pressed="true">Basculer en Utilisateur</a>
+            {% endif %}
+        </div>
+    </div>
+
+
+
+{% endblock %}
+
+
+

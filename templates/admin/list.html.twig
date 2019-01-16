@@ -1,0 +1,68 @@
+{% extends 'admin_base.html.twig' %}
+
+{% block title %}Liste{% endblock %}
+
+{% block stylesheets %}
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <h1 class="text-primary" style="text-align: center">Liste des personnes inscrites</h1>
+
+        <table id="table_id" class="display table-hover">
+            <thead>
+            <tr class="text-primary" align="center">
+                <th>Nom</th>
+                <th>Prénom</th>
+                <th>Pseudo</th>
+                <th>Mail</th>
+                <th>Société</th>
+                <th>Role</th>
+                <th>Profil</th>
+            </tr>
+            </thead>
+            <tbody>
+
+            {% for customer in customers %}
+
+            <tr align="center">
+
+                <td>{{ customer.lastname }}</td>
+                <td>{{ customer.firstname }}</td>
+                <td>{{ customer.username }}</td>
+                <td>{{ customer.mail }}</td>
+                <td>{{ customer.society }}</td>
+                <td>{% if customer.role == 'ROLE_USER' %}
+                        Utilisateur
+                    {% else %}
+                        Administrateur
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{{ path('admin_profile', {'id': customer.id }) }}" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Voir le profil</a>
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+
+
+
+            </tbody>
+        </table>
+
+        <a href="{{ path('admin_home') }}" class="btn btn-primary btn-lg active mb-5" role="button" aria-pressed="true">Retour</a>
+    </div>
+
+
+
+{% endblock %}
+
+{% block javascripts %}
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
+    <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.18/js/dataTables.bootstrap4.min.js"></script>
+    <script type="text/javascript" src="../../assets/js/datatable.js"></script>
+{% endblock %}
+

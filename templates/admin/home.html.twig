@@ -1,0 +1,36 @@
+{% extends 'admin_base.html.twig' %}
+
+{% block title %}Accueil{% endblock %}
+
+{% block body %}
+
+    {% if app.user %}
+        <div class="container">
+            <div class="row justify-content-around">
+                <div class="col-10 col-md-4 m-2">
+                    <h2 class="mb-4 text-primary"> Bien le bonjour, {{ app.user.firstname }} !</h2>
+                    <div class="list-group">
+                        <a href="{{ path('admin_list') }}" class="list-group-item list-group-item-action list-group-item text-primary admin-list"><img class="img-thumbnail mr-2" src="../assets/images/note.png" alt="Register"> Liste des inscrits</a>
+                        <a href="{{ path('admin_present') }}" class="list-group-item list-group-item-action list-group-item text-primary admin-list"><img class="img-thumbnail mr-2" src="../assets/images/present.png" alt="Checkin"> Liste des personnes présentes</a>
+                        <a href="{{ path('admin_activation') }}" class="list-group-item list-group-item-action list-group-item text-primary admin-list"><img class="img-thumbnail mr-2" src="../assets/images/inactivate.png" alt="Activations"> Activations en attente</a>
+                        <a href="{{ path('admin_raz') }}" class="list-group-item list-group-item-action list-group-item text-primary tourniquet admin-list"><img class="img-thumbnail mr-2" src="../assets/images/miniboom4.png" alt="Contisation"> RAZ des cotisations</a>
+                        <a href="{{ path('admin_text') }}" class="list-group-item list-group-item-action list-group-item text-primary tourniquet admin-list"><img class="img-thumbnail mr-2" src="../assets/images/settings.png" alt="Settings"> Options</a>
+                        <a href="{{ path('admin_price') }}" class="list-group-item list-group-item-action list-group-item text-primary admin-list"><img class="img-thumbnail mr-2" src="../assets/images/facturation.png" alt="Facturation"> Facturation</a>
+                        <a href="{{ path('security_logout') }}" class="list-group-item list-group-item-action list-group-item text-primary admin-list"><img class="img-thumbnail mr-2" src="../assets/images/logout.png" alt="Logout"> Se déconnecter</a>
+                    </div>
+                </div>
+
+                <div class="card col-10 col-md-4 shadow-lg m-2 bg-white rounded">
+                    <img class="card-img-top mt-3" src="../assets/images/swimming.png" alt="Swimmer">
+                    <div class="card-body">
+                        <h5 class="card-title">Mon compte</h5>
+                        <p class="lead">Email : <strong>{{ app.user.mail }}</strong></p>
+                        <p class="lead">Pseudo : <strong>{{ app.user.username }}</strong></p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    {% endif %}
+
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Facturation{% endblock %}
+
+{% block body %}
+
+    {% if app.user %}
+        <div class="container">
+            <div class="row justify-content-center">
+                <h1 class="text-primary">Mes enregistrements</h1>
+            </div>
+            <!--!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   Premier collapse !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!-->
+            <div class="accordion col-12 col-md-6 offset-md-3 " id="collapseMonth">
+                {% for key,days in table %}
+                    <div class="card">
+                        <div class="card-header" id="heading{{ loop.index }}" data-toggle="collapse" data-target="#collapse{{ loop.index }}" >
+                            <div class="mb-0 text-primary"  align="center">
+                                <strong>{{ key }}</strong>
+                            </div>
+                        </div>
+                        <div id="collapse{{ loop.index }}" class="collapse" aria-labelledby="heading{{ loop.index }}" data-parent="#collapseMonth">
+                            <div class="card-body">
+                                <!--!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   Deuxième collapse !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!-->
+                                <div class="accordion col-12" id="collapseDays">
+                                    {% for key,day in days %}
+                                        <div class="card">
+                                            <div class="card-header" id="secondHeading{{ key }}" data-toggle="collapse" data-parent="#collapseDays" data-target="#secondCollapse{{ key }}" >
+                                                <div class="mb-0 text-primary"  align="center">
+                                                    {{ day[6] }} {{ day[0] | date('d') }}/{{ day[0] | date('m') }}/{{ day[0] | date('Y') }}
+                                                </div>
+                                            </div>
+                                            <div id="secondCollapse{{ key }}" class="collapse" aria-labelledby="secondHeading{{ key }}" data-parent="#collapseDays">
+                                                <div class="card-body">
+                                                    <table class="table table-hover">
+                                                        <thead>
+                                                        <tr class="text-warning">
+                                                            <td align="center" scope="col"><strong>Arrivé</strong></td>
+                                                            <td align="center" scope="col"><strong>Départ</strong></td>
+                                                            <td align="center" scope="col"><strong>Demie-journées</strong></td>
+                                                        </tr>
+                                                        </thead>
+                                                        <tbody>
+
+                                                        <tr>
+                                                            <td align="center">{{ day[2] | date('H:i:s') }}</td>
+                                                            <td align="center">{{ day[3] | date('H:i:s') }}</td>
+                                                            <td align="center">{{ day[5] }}
+                                                                {% if day[1] == 1 %}
+                                                                    (dont une gratuite)
+                                                                {% elseif day[1] == 2 %}
+                                                                    (dont deux gratuites)
+                                                                {% endif %}
+                                                            </td>
+                                                        </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            <hr>
+            <button onclick="window.location.href='{{ path('user_account') }}'"
+                    class="btn btn-primary mb-3">Retour</button>
+        </div>
+
+    {% endif %}
+
+{% endblock %}

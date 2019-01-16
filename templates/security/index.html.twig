@@ -1,0 +1,222 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Connexion Espace Flex{% endblock %}
+
+{% block body %}
+
+    {% if error %}
+        <div class="container-fluid alert accueil alert-dismissible fade out alert-danger fade show">
+            <div align="center"><strong>{{ error.messageKey | trans(error.messageData, 'security') }}</strong></div>
+        </div>
+    {% endif %}
+
+    {% for message in app.flashes('registration_valid') %}
+            <div class="container-fluid alert accueil alert-dismissible fade out alert-success fade show" align="center">
+                <strong>{{ message }}</strong>
+            </div>
+    {% endfor %}
+
+    {% for message in app.flashes('forgot_password') %}
+            <div class="container-fluid alert accueil alert-dismissible fade out alert-success fade show" align="center">
+                <strong>{{ message }}</strong>
+            </div>
+    {% endfor %}
+
+    {% for message in app.flashes('forgot_password_invalid') %}
+            <div class="container-fluid alert accueil alert-dismissible fade out alert-danger fade show" align="center">
+                <strong>{{ message }}</strong>
+            </div>
+    {% endfor %}
+
+    {% if not app.user %}
+
+        <div class="container mt-5">
+            <div class="row justify-content-center">
+
+                {% if not text.active %}
+                    <div class="col-10 col-md-4">
+                        <div class="p-3">
+                            <button data-toggle="modal" data-target="#modal_login" class="d-block btn btn-block btn-primary">Se connecter</button>
+                        </div>
+                        <div class="p-3">
+                            <button data-toggle="modal" data-target="#modal_registration" class="d-block btn btn-block btn-outline-primary ">S'inscrire</button>
+                        </div>
+                        <div class="p-3">
+                            <button data-toggle="modal" data-target="#modal_forgotPassord" class="d-block btn btn-block btn-sm btn-outline-warning ">Mot de passe oublié ?</button>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="col-12 col-md-6">
+                        <div class="p-3">
+                            <button data-toggle="modal" data-target="#modal_login" class="d-block btn btn-block btn-primary">Se connecter</button>
+                        </div>
+                        <div class="p-3">
+                            <button data-toggle="modal" data-target="#modal_registration" class="d-block btn btn-block btn-outline-primary ">S'inscrire</button>
+                        </div>
+                        <div class="p-3">
+                            <button data-toggle="modal" data-target="#modal_forgotPassord" class="d-block btn btn-block btn-sm btn-outline-warning ">Mot de passe oublié ?</button>
+                        </div>
+                    </div>
+                    <div class="jumbotron col-12 col-md-6 mt-3">
+                        {{ text.content | raw }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+
+        <!--!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   Head Modal Login   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!-->
+
+        <div class="modal fade" id="modal_login">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="text-primary">Connexion</h5>
+                        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <!--!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   Body Modal Login   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!-->
+
+                    <div class="container">
+                        <div class="modal-body login"><h1 class="text-primary">Bonjour baigneur !</h1>
+                            <form  method="post" action="{{ path('security_login') }}">
+                                <div class="form-group">
+                                    <input type="text" id="pseudo" placeholder="Pseudo" required name="_username" class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <input type="password" id="mdp" placeholder="Mot de passe" required name="_password" class="form-control">
+                                </div>
+                                <div class="modal-footer">
+                                    <div class="container">
+                                        <div class="row justify-content-between">
+                                            <button type="button" class="btn btn-outline-danger" data-dismiss="modal">Fermer</button>
+                                            <button type="submit" class="btn btn-success loginForm">Se connecter</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  Head Modal Registration   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!-->
+
+        <div class="modal fade" id="modal_registration">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title text-primary">Inscription</h5>
+                        <button class="close" type="button" data-dismiss="modal" aria-label="Fermer">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <!--!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   Body Modal Registration   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!-->
+
+                    <div class="container">
+                        <div class="modal-body registration text-primary">
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   Head Modal Forgot Password   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!-->
+
+        <div class="modal fade" id="modal_forgotPassord">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="text-primary">Mot de pass oublié ?</h5>
+                        <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+
+                    <!--!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   Body Modal Forgot Password   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!-->
+
+                    <div class="modal-body">
+                        <div class="container">
+                            <p class="text-primary">Vous avez passé la bouée et égaré votre mot de passe dans les tréfond de l'océan ?</p>
+                            <p class="text-primary">Pas de panique, il vous suffit de renseigner dans le champ ci-dessous votre adresse mail et un lien permettant de modifier votre mot de passe vous sera envoyé.</p>
+                            {% if error %}
+                                <div class="alert alert-danger">{{ error.messageKey | trans(error.messageData, 'security') }}</div>
+                            {% endif %}
+                            <div class="container text-primary">
+                                {{ form_start(passForm) }}
+                                {{ form_widget(passForm) }}
+                                <div class="modal-footer">
+                                    <div class="container">
+                                        <div class="row justify-content-between">
+                                            <button class="btn btn-outline-danger" type="button" data-dismiss="modal">Fermer</button>
+                                            <button class="btn btn-success" type="submit">Envoyer</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                {{ form_end(passForm) }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="container">
+            <p class="alert alert-danger fade show container-fluid">
+                <button class="close" type="button"></button>
+                <strong>Hein??!</strong> Mais que... Vous êtes déjà connecté ET inscrit ! <a {% if app.user.role == 'ROLE_USER' %} href="{{ path('user_home') }}"{% elseif app.user.role == 'ROLE_ADMIN'%} href="{{ path('admin_home') }}" {% endif %}class="alert-link" style="font-weight: bold; text-decoration: none">Cliquer ici</a> pour revenir à la page d'accueil.
+            </p>
+        </div>
+    {% endif %}
+
+    <div class="container mt-5">
+        <div class="text-center">
+            <p>Il reste <strong>{{ place }}</strong> place(s) dans l'espace Flex, ce nombre de places est susceptible de changer très rapidement.</p>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javascripts %}
+
+    <!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   Registration form modal  Ajax !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
+
+    <script>
+        $('#modal_registration').on('shown.bs.modal', function () {
+            let modal = $(this);
+            $.ajax('{{ path('user_create') }}', {
+                success: function(data) {
+                    modal.find('.modal-body.registration').html(data);
+                }
+            });
+            $('#modal_registration').on('submit', 'form', function(e){
+                // il est impératif de commencer avec cette méthode qui va empêcher le navigateur d'envoyer le formulaire lui-même
+                e.preventDefault();
+
+                $form = $(e.target);
+                modal = $('#modal_registration');
+
+                let $submitButton = $form.find(':submit');
+                $submitButton.html('<i class="fas fa-spinner fa-pulse"></i>');
+                $submitButton.prop('disabled', true);
+
+                // ajaxSubmit du plugin ajaxForm nécessaire pour l'upload de fichier
+                $form.ajaxSubmit({
+                    type: 'post',
+                    success: function(data) {
+                        if (data === 'success') {
+                            modal.modal('hide');
+                            window.location.reload();
+                        } else {
+                            modal.find('.modal-body.registration').html(data);
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+{% endblock %}

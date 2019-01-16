@@ -1,0 +1,33 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Profile de {{ app.user.username }}{% endblock %}
+
+{% block body %}
+
+    {% if app.user %}
+        <div class="container">
+            <div class="row justify-content-around">
+                <div class="col-10 col-md-4 m-2">
+                    <h2 class="mb-4 text-primary"> Bien le bonjour, {{ app.user.firstname }} !</h2>
+                    <div class="list-group">
+                        <a href="{{ path('user_listing') }}" class="list-group-item list-group-item-action list-group-item text-primary user-list"><img class="img-thumbnail mr-2" src="../assets/images/note.png" alt="Checkin"> Mes enregistrements</a>
+                        <a href="{{ path('user_account_settings') }}" class="tourniquet list-group-item list-group-item-action list-group-item text-primary user-list"><img class="img-thumbnail mr-2" src="../assets/images/settings.png" alt="Settings"> Paramètres du compte</a>
+                        <a href="{{ path('user_home') }}" class="list-group-item list-group-item-action list-group-item text-primary user-list"><img class="img-thumbnail mr-2" src="../assets/images/beach.png" alt="Beach"> Accueil</a>
+                        <a href="{{ path('security_logout') }}" class="list-group-item list-group-item-action list-group-item text-primary user-list"><img class="img-thumbnail mr-2" src="../assets/images/logout.png" alt="Logout"> Se déconnecter</a>
+                    </div>
+                </div>
+
+                <div class="card col-10 col-md-4 shadow-lg m-2 bg-white rounded">
+                    <img class="card-img-top mt-3" src="../assets/images/swimming.png" alt="Swimmer">
+                    <div class="card-body">
+                        <h5 class="card-title">Mon compte</h5>
+                        <p class="lead">Email : <strong>{{ app.user.mail }}</strong></p>
+                        <p class="lead">Pseudo : <strong>{{ app.user.username }}</strong></p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    {% endif %}
+
+{% endblock %}

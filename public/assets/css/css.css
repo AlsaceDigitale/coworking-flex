@@ -1,0 +1,48 @@
+h1, h2, h3, h4, h5 {
+    font-family: 'Pattaya', sans-serif;
+}
+
+#raz {
+    border-radius: 60px;
+    box-shadow: 10px 10px 20px grey;
+    transition: box-shadow 1s ease;
+}
+
+#raz:hover {
+    box-shadow: 5px 5px 20px grey;
+}
+
+.img-thumbnail {
+    border: none;
+}
+
+/*
+    Utilisé pour rendre les background-color des img-thumbnail de la meme couleur que le hover au hover
+ */
+.admin-list:hover .img-thumbnail, .user-list:hover .img-thumbnail {
+    background-color: #f6f6f6;
+}
+
+.jumbotron.first {
+    box-shadow: none;
+    transition: box-shadow 1s ease;
+}
+
+.jumbotron.first:hover {
+    box-shadow:  0px 0px 30px 5px rgba(100,100,100,0.2);
+}
+
+.alertFade {
+    opacity: 0;
+    transition: opacity 1s ease;
+    position: absolute;
+    top: 38.9vh;
+    z-index: 10;
+}
+
+.alertFadeIn {
+    opacity: 1;
+    position: absolute;
+    top: 38.9vh;
+    z-index: 10;
+}
