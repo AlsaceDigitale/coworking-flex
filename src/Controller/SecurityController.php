@@ -319,9 +319,9 @@ class SecurityController extends AbstractController
     {
         $customer = $this->getUser();
 
-        if ($customer->getRoles() == ["ROLE_USER"]) {
+        if ($customer->getRole() == "ROLE_USER") {
             return $this->redirectToRoute("user_home");
-        } elseif ($customer->getRoles() == ["ROLE_ADMIN"]) {
+        } elseif ($customer->getRole() == "ROLE_ADMIN") {
             return $this->redirectToRoute("admin_home");
         }
     }
