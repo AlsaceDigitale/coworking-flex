@@ -27,7 +27,7 @@ class SecurityController extends AbstractController
      * @var AuthenticationUtils
      */
     private $utils;
-    private $adminMail = "kuroe94i@gmail.com";
+    private $adminMail = "coworking-flex@alsacedigitale.org";
     private $options;
 
     /**
