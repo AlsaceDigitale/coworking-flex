@@ -8,7 +8,7 @@
         <div class="container">
             <div class="row justify-content-around">
                 <div class="col-10 col-md-4 m-2">
-                    <h2 class="mb-4 text-primary"> Bien le bonjour, {{ app.user.firstname }} !</h2>
+                    <h2 class="mb-4 text-primary"> Bonjour, {{ app.user.firstname }} !</h2>
                     <div class="list-group">
                         <a href="{{ path('user_listing') }}" class="list-group-item list-group-item-action list-group-item text-primary user-list"><img class="img-thumbnail mr-2" src="../assets/images/note.png" alt="Checkin"> Mes enregistrements</a>
                         <a href="{{ path('user_account_settings') }}" class="tourniquet list-group-item list-group-item-action list-group-item text-primary user-list"><img class="img-thumbnail mr-2" src="../assets/images/settings.png" alt="Settings"> Paramètres du compte</a>
