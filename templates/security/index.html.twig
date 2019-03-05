@@ -80,7 +80,7 @@
                     <!--!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   Body Modal Login   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!-->
 
                     <div class="container">
-                        <div class="modal-body login"><h1 class="text-primary">Bonjour baigneur !</h1>
+                        <div class="modal-body login"><h1 class="text-primary">Bonjour plagiste !</h1>
                             <form  method="post" action="{{ path('security_login') }}">
                                 <div class="form-group">
                                     <input type="text" id="pseudo" placeholder="Pseudo" required name="_username" class="form-control">
@@ -142,7 +142,7 @@
 
                     <div class="modal-body">
                         <div class="container">
-                            <p class="text-primary">Vous avez passé la bouée et égaré votre mot de passe dans les tréfond de l'océan ?</p>
+                            <p class="text-primary">Vous avez égaré votre mot de passe ?</p>
                             <p class="text-primary">Pas de panique, il vous suffit de renseigner dans le champ ci-dessous votre adresse mail et un lien permettant de modifier votre mot de passe vous sera envoyé.</p>
                             {% if error %}
                                 <div class="alert alert-danger">{{ error.messageKey | trans(error.messageData, 'security') }}</div>
@@ -169,7 +169,7 @@
         <div class="container">
             <p class="alert alert-danger fade show container-fluid">
                 <button class="close" type="button"></button>
-                <strong>Hein??!</strong> Mais que... Vous êtes déjà connecté ET inscrit ! <a {% if app.user.role == 'ROLE_USER' %} href="{{ path('user_home') }}"{% elseif app.user.role == 'ROLE_ADMIN'%} href="{{ path('admin_home') }}" {% endif %}class="alert-link" style="font-weight: bold; text-decoration: none">Cliquer ici</a> pour revenir à la page d'accueil.
+                <strong>Hein??!</strong> Mais que... Vous êtes déjà connecté ET inscrit ! <a {% if app.user.role == 'ROLE_USER' %} href="{{ path('user_home') }}"{% elseif app.user.role == 'ROLE_ADMIN'%} href="{{ path('admin_home') }}" {% endif %}class="alert-link" style="font-weight: bold; text-decoration: none">Cliquez ici</a> pour revenir à la page d'accueil.
             </p>
         </div>
     {% endif %}
