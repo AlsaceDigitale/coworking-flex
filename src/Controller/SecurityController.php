@@ -27,7 +27,7 @@ class SecurityController extends AbstractController
      * @var AuthenticationUtils
      */
     private $utils;
-    private $adminMail = getenv('ADMIN_MAIL') ?: "coworking-flex@alsacedigitale.org";
+    private $adminMail = "coworking-flex@alsacedigitale.org";
     private $options;
 
     /**
@@ -252,7 +252,7 @@ class SecurityController extends AbstractController
 
             $message2 = (new \Swift_Message('Nouvel utilisateur sur l\'espace flex'))
                 ->setFrom($this->adminMail)
-                ->setTo($this->adminMail)
+                ->setTo(getenv('ADMIN_MAIL') ?: $this->adminMail)
                 ->setBody(
                     $this->renderView(
                         'security/registrationMailAdmin.html.twig',
