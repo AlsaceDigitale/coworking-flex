@@ -34,6 +34,10 @@
                             <p class="mb-3 h5">{{ customer.zip }}</p>
                             <h3 class="text-primary">Ville : </h3>
                             <p class="mb-3 h5">{{ customer.city }}</p>
+                            <h3 class="text-primary">Statut : </h3>
+                            <p class="mb-3 h5">
+                            {{ customer.getStatus }}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -45,6 +49,14 @@
                     {{ form_row(formPromo.counter, {'label':false, 'attr': {'class': 'col-4 offset-4'}}) }}
                     <button type="submit" class="btn btn-success btn-lg col-4 offset-4">Changer</button>
                     {{ form_end(formPromo) }}
+                </div>
+                <br/>
+                <div class="jumbotron first">
+                    {{ form_start(formStatus) }}
+                    <h3 class="text-primary text-center mb-3">Statut :</h3>
+                    {{ form_row(formStatus.status, {'label':false, 'attr': {'class': 'col-4 offset-4'}}) }}
+                    <button type="submit" class="btn btn-success btn-lg col-4 offset-4">Changer</button>
+                    {{ form_end(formStatus) }}
                 </div>
             </div>
 

@@ -6,6 +6,8 @@ use App\Form\HalfDayType;
 use App\Form\MonthType;
 use App\Form\PlaceType;
 use App\Form\PromoType;
+use App\Form\CustomerType;
+use App\Form\CustomerSettingStatusType;
 use App\Form\TextHomeType;
 use App\Repository\CheckInRepository;
 use App\Repository\CustomerRepository;
@@ -155,12 +157,21 @@ class AdminController extends AbstractController
             $this->om->flush();
         };
 
+        $status = $this->createForm(CustomerSettingStatusType::class, $customer);
+        $status->handleRequest($request);
+
+        if ($status->isSubmitted() && $status->isValid()) {
+            $this->om->persist($customer);
+            $this->om->flush();
+        }
+
         return $this->render(
             'admin/profile.html.twig',
             [
                 'customer' => $customer,
                 'subscription' => $subscription,
-                'formPromo' => $counter->createView()
+                'formPromo' => $counter->createView(),
+                'formStatus' => $status->createView()
             ]
         );
     }

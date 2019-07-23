@@ -20,6 +20,7 @@
                 <th >Nom</th>
                 <th>Prénom</th>
                 <th>Pseudo</th>
+                <th>Statut</th>
                 <th>Mail</th>
 
             </tr>
@@ -33,6 +34,7 @@
                 <td>{{ checkin.customer.lastname }}</td>
                 <td>{{ checkin.customer.firstname }}</td>
                 <td>{{ checkin.customer.username }}</td>
+                <td>{% if checkin.customer.status is null or checkin.customer.status is empty %} - {% else %} {{ checkin.customer.status }} {% endif %}</td>
                 <td>{{ checkin.customer.mail }}</td>
 
             </tr>

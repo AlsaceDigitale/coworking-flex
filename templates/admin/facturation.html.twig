@@ -37,8 +37,9 @@
                 <th>Nom</th>
                 <th>Prénom</th>
                 <th>Mail</th>
+                <th>Statut</th>
                 <th>Demie-journées</th>
-                <th>Total à factuer</th>
+                <th>Total à facturer</th>
             </tr>
             </thead>
             <tbody>
@@ -50,6 +51,7 @@
                     <td>{{ customer.lastname }}</td>
                     <td>{{ customer.firstname }}</td>
                     <td>{{ customer.mail }}</td>
+                    <td>{% if customer.status is null or customer.status is empty %} - {% else %} {{ customer.status }} {% endif %}</td>
                     <td>{{ days[customer.id] + free[customer.id]}} {% if free[customer.id] != 0 %} dont {{ free[customer.id] }} gratuite{% if free[customer.id] > 1 %}s{% endif %}{% endif %}</td>
                     {% if days[customer.id] * price.content < month.content %}
                         <td>{{ days[customer.id] * price.content }} €</td>
