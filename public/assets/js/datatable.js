@@ -1,9 +1,10 @@
 $(document).ready( function () {
     $('#table_id').DataTable( {
+        "lengthMenu": [ [100, 150, 200, 250, 300, -1], [100, 150, 200, 250, 300, "Tout afficher"] ],
         language: {
             processing:     "Traitement en cours...",
             search:         "Rechercher&nbsp;:",
-            lengthMenu:    "Afficher _MENU_ &eacute;l&eacute;ments",
+            lengthMenu:     'Afficher _MENU_ &eacute;l&eacute;ments',
             info:           "Affichage de l'&eacute;lement _START_ &agrave; _END_ sur _TOTAL_ &eacute;l&eacute;ments",
             infoEmpty:      "Affichage de l'&eacute;lement 0 &agrave; 0 sur 0 &eacute;l&eacute;ments",
             infoFiltered:   "(filtr&eacute; de _MAX_ &eacute;l&eacute;ments au total)",
@@ -24,3 +25,7 @@ $(document).ready( function () {
         }
     } );
 } );
+
+// $('#table_id').DataTable( {
+//     "lengthMenu": [ 100, 150, 200, 250, 300 ]
+// } );
