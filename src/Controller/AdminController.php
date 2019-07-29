@@ -2,21 +2,33 @@
 
 namespace App\Controller;
 
+use App\Entity\Customer;
+use App\Form\CustomerSettingsAccountType;
+use App\Form\CustomerSettingsPasswordType;
+use App\Form\CustomerSettingsProfileType;
+use App\Repository\CheckInRepository;
+use App\Repository\OptionsRepository;
+use App\Repository\SubscriptionRepository;
+use App\Service\Services;
+use Doctrine\Common\Persistence\ObjectManager;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\Routing\Annotation\Route;
+use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
+use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
+use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+use Symfony\Component\Validator\Constraints\DateTime;
 use App\Form\HalfDayType;
 use App\Form\MonthType;
 use App\Form\PlaceType;
 use App\Form\PromoType;
+use App\Form\CustomerType;
+use App\Form\CustomerSettingStatusType;
 use App\Form\TextHomeType;
-use App\Repository\CheckInRepository;
 use App\Repository\CustomerRepository;
-use App\Repository\OptionsRepository;
 use App\Repository\PromoRepository;
-use App\Repository\SubscriptionRepository;
-use Doctrine\Common\Persistence\ObjectManager;
 use phpDocumentor\Reflection\Types\Null_;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\Routing\Annotation\Route;
 
 class AdminController extends AbstractController
 {
@@ -155,12 +167,21 @@ class AdminController extends AbstractController
             $this->om->flush();
         };
 
+        $status = $this->createForm(CustomerSettingStatusType::class, $customer);
+        $status->handleRequest($request);
+
+        if ($status->isSubmitted() && $status->isValid()) {
+            $this->om->persist($customer);
+            $this->om->flush();
+        }
+
         return $this->render(
             'admin/profile.html.twig',
             [
                 'customer' => $customer,
                 'subscription' => $subscription,
-                'formPromo' => $counter->createView()
+                'formPromo' => $counter->createView(),
+                'formStatus' => $status->createView()
             ]
         );
     }
@@ -197,10 +218,6 @@ class AdminController extends AbstractController
             $this->om->persist($raz);
             $this->om->flush();
         }
-
-
-
-
 
         return $this->render('admin/raz.html.twig');
     }
@@ -341,8 +358,10 @@ class AdminController extends AbstractController
 
     /**
      * @Route("/admin/price", name="admin_price")
+     * @param OptionsRepository $optionsRepository
+     * @param Request $request
      */
-    public function price()
+    public function price(OptionsRepository $optionsRepository, Request $request)
     {
 
         $data = 0;
@@ -418,6 +437,72 @@ class AdminController extends AbstractController
             }
         }
 
+        $jours = [
+            'Mon' => 'Lundi',
+            'Tue' => 'Mardi',
+            'Wed' => 'Mercredi',
+            'Thu' => 'Jeudi',
+            'Fri' => 'Vendredi',
+            'Sat' => 'Samedi',
+            'Sun' => 'Dimanche'
+        ];
+
+        $halfDayPrice = $optionsRepository->findOneBy([
+            'label' => 'HalfDay'
+        ])->getContent();
+
+        $monthPrice = $optionsRepository->findOneBy([
+            'label' => 'Month'
+        ])->getContent();
+
+        $all_checkins = [];
+
+        foreach ($customers as $key => $customer) {
+            $user_checkins = $this->checkInRepository->findBy(
+                ['customer' => $customer, 'arrival_month' => $data],
+                ['id' => 'DESC']
+            );
+
+            $tab = [];
+            foreach ($user_checkins as $key => $checkin) {
+                $prix = 0;
+                $arrivee = $checkin->getArrival();
+                $annee = $arrivee->format('Y');
+                $mois = $arrivee->format('m');
+                foreach ($this->checkInRepository->findLikeDate($annee.'-'.$mois, $customer->getId()) as $result) {
+                    $prix += ($result->getHalfDay() - $result->getFree()) * $halfDayPrice;
+                }
+                if ($prix>$monthPrice) {
+                    $prix = $monthPrice;
+                }
+                $jour = $jours[$arrivee->format('D')];
+                $depart = $checkin->getLeaving();
+                $difference = $checkin->getDiff();
+                $demijournee = $checkin->getHalfDay();
+                $gratuit = $checkin->getFree();
+                $date_cplt = $arrivee->format('Y-m-d');
+                $line = $month[$mois] . ' ' . $annee.' - '.$prix.'€';
+
+                $tab[$line][] = [$date_cplt, $gratuit, $arrivee, $depart, $difference, $demijournee, $jour];
+            }
+            $all_checkins[$customer->getId()] = $tab;
+        }
+
+        $song_sophie = [
+            1 => 'Du temps de votre vie,',
+            2 => 'Vous vous appeliez Sophie',
+            3 => 'Et vous étiez jolie',
+            4 => 'Mademoiselle Sophie',
+            5 => 'Oh, Sophie, Sophie'
+        ];
+
+        $song_explain = [
+            'title' => "Sophie",
+            'author' => "Edith Piaf",
+            'film' => "Neuf Garçons, un coeur",
+            'date' => 1947
+        ];
+
         return $this->render(
             'admin/facturation.html.twig',
             [
@@ -432,7 +517,10 @@ class AdminController extends AbstractController
                 'dates' => $dates,
                 'change' => $month,
                 'data' => $data,
-                'free' => $free
+                'free' => $free,
+                'all_checkins' => $all_checkins,
+                'song_sophie' => $song_sophie,
+                'song_explain' => $song_explain
             ]
         );
     }

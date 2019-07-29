@@ -37,20 +37,107 @@
                 <th>Nom</th>
                 <th>Prénom</th>
                 <th>Mail</th>
-                <th>Demie-journées</th>
-                <th>Total à factuer</th>
+                <th>Statut</th>
+                <th>Présence (demi-journées)</th>
+                <th>Total à facturer</th>
             </tr>
             </thead>
             <tbody>
-
             {% for customer in customers %}
-
+                
                 <tr align="center">
 
                     <td>{{ customer.lastname }}</td>
                     <td>{{ customer.firstname }}</td>
                     <td>{{ customer.mail }}</td>
-                    <td>{{ days[customer.id] + free[customer.id]}} {% if free[customer.id] != 0 %} dont {{ free[customer.id] }} gratuite{% if free[customer.id] > 1 %}s{% endif %}{% endif %}</td>
+                    <td>{% if customer.status is null or customer.status is empty %} - {% else %} {{ customer.status }} {% endif %}</td>
+                    <td>{% set table = all_checkins[customer.id] %}
+
+                        <!-- Button trigger modal -->
+                        <button type="button" class="btn btn-ouline-primary" data-toggle="modal" data-target="#presenceModalLong{{ loop.index0 }}">
+                            {{ days[customer.id] + free[customer.id]}} {% if free[customer.id] != 0 %} dont {{ free[customer.id] }} gratuite{% if free[customer.id] > 1 %}s{% endif %}{% endif %}
+                        </button>
+
+                        <!-- Modal -->
+                        <div class="modal fade" id="presenceModalLong{{ loop.index0 }}" role="dialog" aria-labelledby="presenceModalLongTitle{{ loop.index0 }}" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="presenceModalLongTitle{{ loop.index }}">Présences de {{ customer.firstname }}</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                    <span aria-hidden="true">&times;</span>
+                                    </button>
+                                </div>
+                                <div class="modal-body">
+                                        
+                                        {% for key,days in table %}
+                                            <div class="card">
+                                                <div class="card-header" id="heading{{ loop.index0 }}" >
+                                                    <div class="mb-0 text-primary"  align="center">
+                                                        <strong>{{ key }}</strong>
+                                                    </div>
+                                                </div>
+                                                <div class="card-body" id="body{{ loop.index0 }}">
+                                                    <table id="presence_{{ customer.id }}" class="display table-hover">
+                                                        <thead>
+                                                        <tr class="text-primary" align="center">
+                                                            <th>Date</th>
+                                                            <th>Arrivée</th>
+                                                            <th>Départ</th>
+                                                            <th>Demi-journées</th>
+                                                        </tr>
+                                                        </thead>
+
+                                                        <tbody>
+                                                        {% for key,day in days %}
+
+                                                            <tr align="center">
+
+                                                                <td>{{ day[6] }} {{ day[0] | date('d') }}/{{ day[0] | date('m') }}/{{ day[0] | date('Y') }}</td>
+                                                                <td>{{ day[2] | date('H:i:s') }}</td>
+                                                                <td>{{ day[3] | date('H:i:s') }}</td>
+                                                                <td>{{ day[5] }}
+                                                                {% if day[1] == 1 %}
+                                                                    (dont une gratuite)
+                                                                {% elseif day[1] == 2 %}
+                                                                    (dont deux gratuites)
+                                                                {% endif %}
+                                                                </td>
+                                                            </tr>
+                                                        {% endfor %}   
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+
+                                </div>
+                                
+                                <button style="background-color:transparent;border:0px solid white;outline:0px auto;" type="button" data-toggle="collapse" data-target="#collapseSophieSong{{ loop.index0 }}" aria-expanded="false" aria-controls="collapseSophieSong{{ loop.index0 }}">
+                                    <i style="background-color:transparent;margin-left:92.5%;font-size:0.9em;color:gray;opacity:0.2;" class="fas fa-chevron-down"></i>
+                                </button>
+                                    <div class="collapse" id="collapseSophieSong{{ loop.index0 }}">
+                                        <p class="song-sophie{{ loop.index0 }}">
+                                            <div class="row">
+                                                <div class="col-2" style="text-align:right;font-size:0.9em;opacity:0.5;">
+                                                    <i class="fas fa-music"></i>
+                                                </div>
+                                                <div class="col-4" style="text-align:left;font-size:0.9em;">
+                                                    {{ song_sophie[loop.index0 % 5 + 1] }}
+                                                </div>
+                                                <div class="col-6" style="text-align:left;font-size:0.9em;opacity:0.7;">
+                                                    <i>{{ song_explain["title"] }}</i> <span style="margin-left:0.5em;"></span>{{ song_explain["author"] }} - {{ song_explain["date"] }}
+                                                    <br/>
+                                                    du film <i>{{ song_explain["film"]}}</i>
+                                                </div>
+                                            </div>
+                                        </p>
+                                    </div>
+                            </div>
+                        </div>
+                        </div>
+
+                    </td>
                     {% if days[customer.id] * price.content < month.content %}
                         <td>{{ days[customer.id] * price.content }} €</td>
                     {% else %}

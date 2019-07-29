@@ -17,6 +17,7 @@
                 <th>Prénom</th>
                 <th>Pseudo</th>
                 <th>Mail</th>
+                <th>Statut</th>
                 <th>Société</th>
                 <th>Role</th>
                 <th>Profil</th>
@@ -32,6 +33,7 @@
                 <td>{{ customer.firstname }}</td>
                 <td>{{ customer.username }}</td>
                 <td>{{ customer.mail }}</td>
+                <td>{% if customer.status is null or customer.status is empty %} - {% else %} {{ customer.status }} {% endif %}</td>
                 <td>{{ customer.society }}</td>
                 <td>{% if customer.role == 'ROLE_USER' %}
                         Utilisateur
