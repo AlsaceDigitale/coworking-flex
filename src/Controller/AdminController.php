@@ -459,8 +459,7 @@ class AdminController extends AbstractController
 
         foreach ($customers as $key => $customer) {
             $user_checkins = $this->checkInRepository->findBy(
-                ['customer' => $customer],
-                ['arrival_month' => $data],
+                ['customer' => $customer, 'arrival_month' => $data],
                 ['id' => 'DESC']
             );
 
