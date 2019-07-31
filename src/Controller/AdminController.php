@@ -3,6 +3,9 @@
 namespace App\Controller;
 
 use App\Entity\Customer;
+use App\Entity\HalfDayAdjustment;
+use App\Form\HalfDayAdjustmentType;
+use App\Repository\HalfDayAdjustmentRepository;
 use App\Form\CustomerSettingsAccountType;
 use App\Form\CustomerSettingsPasswordType;
 use App\Form\CustomerSettingsProfileType;
@@ -38,6 +41,7 @@ class AdminController extends AbstractController
     private $subscriptionRepository;
     private $optionsRepository;
     private $promoRepository;
+    private $halfDayAdjustmentRepository;
     private $om;
 
     public function __construct(
@@ -46,6 +50,7 @@ class AdminController extends AbstractController
         SubscriptionRepository $subscriptionRepository,
         OptionsRepository $optionsRepository,
         PromoRepository $promoRepository,
+        HalfDayAdjustmentRepository $halfDayAdjustmentRepository,
         ObjectManager $om
     ) {
         $this->checkInRepository=$checkInRepository;
@@ -53,6 +58,7 @@ class AdminController extends AbstractController
         $this->subscriptionRepository=$subscriptionRepository;
         $this->optionsRepository=$optionsRepository;
         $this->promoRepository=$promoRepository;
+        $this->halfDayAdjustmentRepository=$halfDayAdjustmentRepository;
         $this->om=$om;
     }
 
@@ -464,6 +470,7 @@ class AdminController extends AbstractController
             );
 
             $tab = [];
+
             foreach ($user_checkins as $key => $checkin) {
                 $prix = 0;
                 $arrivee = $checkin->getArrival();
@@ -503,6 +510,25 @@ class AdminController extends AbstractController
             'date' => 1947
         ];
 
+        $ajustement = new HalfDayAdjustment();
+
+        $formHalfDayAdjustment = $this->createForm(HalfDayAdjustmentType::class, $ajustement);
+        $formHalfDayAdjustment->handleRequest($request);
+
+        if ($formHalfDayAdjustment->isSubmitted() && $formHalfDayAdjustment->isValid()) {
+            $this->om->persist($ajustement);
+            $this->om->flush();
+        }
+
+        $all_adjustments = [];
+
+        foreach ($customers as $key => $customer) {
+            $all_adjustments[$customer->getId()] = $this->halfDayAdjustmentRepository->findOneBy(
+                ['customer_id' => $customer->getId(), 'arrival_month' => $data],
+                ['id' => 'DESC']
+            );
+        };
+            
         return $this->render(
             'admin/facturation.html.twig',
             [
@@ -520,7 +546,9 @@ class AdminController extends AbstractController
                 'free' => $free,
                 'all_checkins' => $all_checkins,
                 'song_sophie' => $song_sophie,
-                'song_explain' => $song_explain
+                'song_explain' => $song_explain,
+                'formHalfDayAdjustment' => $formHalfDayAdjustment->createView(),
+                'all_adjustments' => $all_adjustments
             ]
         );
     }
