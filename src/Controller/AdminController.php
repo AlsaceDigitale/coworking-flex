@@ -493,17 +493,28 @@ class AdminController extends AbstractController
                 ## Customer's attendance card body [Arrivee (jj-mm-aaaa hh:mm:ss) | Depart (jj-mm-aaaa hh:mm:ss) | Demi-Journées (int)] ##
                 $Arrivee = $checkin->getArrival();
                 $Jour_arrivee_str = $jours[$Arrivee->format('D')];
-                $Jour_arrivee_num = $Arrivee->format('D');
-                $Mois_arrivee_num = $Arrivee->format('M');
+                $Jour_arrivee_num = $Arrivee->format('d');
+                $Mois_arrivee_num = $Arrivee->format('m');
                 $Annee_arrivee_num = $Arrivee->format('Y');
                 $Heure_arrivee = $Arrivee->format('H:i:s');
                 
                 $Depart = $checkin->getLeaving();
-                $Jour_depart_str = $jours[$Depart->format('D')];
-                $Jour_depart_num = $Depart->format('D');
-                $Mois_depart_num = $Depart->format('M');
-                $Annee_depart_num = $Depart->format('Y');
-                $Heure_depart = $Depart->format('H:i:s');
+                if($Depart != null)
+                {
+                    $Jour_depart_str = $jours[$Depart->format('D')];
+                    $Jour_depart_num = $Depart->format('d');
+                    $Mois_depart_num = $Depart->format('m');
+                    $Annee_depart_num = $Depart->format('Y');
+                    $Heure_depart = $Depart->format('H:i:s');
+                }
+                else
+                {
+                    $Jour_depart_str = null;
+                    $Jour_depart_num = null;
+                    $Mois_depart_num = null;
+                    $Annee_depart_num = null;
+                    $Heure_depart = null;
+                }
 
                 $Demijournees = $checkin->getHalfDay();
                 $Demijournees_offertes = $checkin->getFree();

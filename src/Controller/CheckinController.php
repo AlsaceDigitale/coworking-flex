@@ -104,10 +104,7 @@ class CheckinController extends AbstractController
                     } else {
                         $checkout->setFree(0);
                     }
-                } elseif ($time_hours >= 4 && $time_min > 30) {
-                    /*
-                    * If the difference (checkout-checkin) > 4h30 : setHalfDay(2)
-                    */
+                } else {
                     $checkout->setHalfDay(2);
                     if ($promo->getCounter() == 1) {
                         $checkout->setFree(1);
@@ -176,7 +173,7 @@ class CheckinController extends AbstractController
         $interval = $checkin->getArrival()->diff($checkin->getLeaving());
         $checkin->setDiff(new \DateTime($interval->format('%h:%i:%s')));
         $time_hours = $interval->format('%h');
-        $time_min = $interval->format('$i');
+        $time_min = $interval->format('%i');
         $timeDay = $interval->format('%d');
 
         if ($halfday_count >= 2) {
@@ -194,11 +191,8 @@ class CheckinController extends AbstractController
                 $promo->setCounter($promo->getCounter()-1);
             } else {
                 $checkin->setFree(0);
-            }
-        } elseif ($time_hours >= 4 && $time_min > 30) {
-            /*
-            * If the difference (checkout-checkin) > 4h30 : setHalfDay(2)
-            */
+            }echo 'CAS 2';
+        } else {
             $checkin->setHalfDay(2);
             if ($promo->getCounter() == 1) {
                 $checkin->setFree(1);
@@ -219,7 +213,7 @@ class CheckinController extends AbstractController
             'bye',
             'A la prochaine '
         );
-
+        die();
         return $this->redirectToRoute('user_home');
     }
 }
