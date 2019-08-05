@@ -191,7 +191,7 @@ class CheckinController extends AbstractController
                 $promo->setCounter($promo->getCounter()-1);
             } else {
                 $checkin->setFree(0);
-            }echo 'CAS 2';
+            }
         } else {
             $checkin->setHalfDay(2);
             if ($promo->getCounter() == 1) {
@@ -213,7 +213,7 @@ class CheckinController extends AbstractController
             'bye',
             'A la prochaine '
         );
-        die();
+
         return $this->redirectToRoute('user_home');
     }
 }
