@@ -30,8 +30,6 @@
             <h2 class="text-primary" style="text-align: center">Détail du mois de {{ change[data | date('m')] }} {{ data | date('Y') }} </h2>
         {% endif %}
 
-
-
         <table id="table_id" class="display table-hover">
             <thead>
             <tr class="text-primary" align="center">
@@ -46,7 +44,7 @@
             </thead>
             <tbody>
             {% for customer in customers %}
-                
+
                 <tr align="center">
 
                     <td>{{ customer.lastname }}</td>
@@ -64,12 +62,12 @@
                         {% endif %}
 
                         <!-- Button presence modal -->
-                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#presenceModalLong{{ loop.index0 }}">
-                            {{ days[customer.id] + free[customer.id]}} {% if free[customer.id] != 0 %} dont {{ free[customer.id] }} gratuite{% if free[customer.id] > 1 %}s{% endif %}{% endif %}
+                        <button type="button" class="btn btn-primary btn-halfdays" data-toggle="modal" data-target="#presenceModalLong{{ loop.index0 }}">
+                            {{ days[customer.id] }} {% if free[customer.id] > 0 %}<span class="badge badge-light notif-free">-{{ free[customer.id] }}</span>{% endif %}
                         </button>
 
                         <!-- Button adjust modal -->
-                        <button type="button" class="btn btn-primary adjustModalTrigger" data-toggle="modal" data-target="#adjustModalLong"
+                        <button type="button" class="btn btn-outline-primary adjust-btn adjustModalTrigger" data-toggle="modal" data-target="#adjustModalLong"
                         data-counter-remove="{{ counterRemove }}" 
                         data-counter-add="{{ counterAdd }}" 
                         data-customer-firstname="{{ customer.firstname }}" 
@@ -82,7 +80,7 @@
                         <div class="modal-dialog modal-lg">
                             <div class="modal-content">
                                 <div class="modal-header">
-                                    <h5 class="modal-title" id="presenceModalLongTitle{{ loop.index }}">Présences de {{ customer.firstname }}</h5>
+                                    <h3 class="modal-title" id="presenceModalLongTitle{{ loop.index }}">Présences de {{ customer.firstname }}</h3>
                                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                     <span aria-hidden="true">&times;</span>
                                     </button>
@@ -108,18 +106,28 @@
                                                         </thead>
 
                                                         <tbody>
+                                                        
                                                         {% for key,day in days %}
-
+                                                            
                                                             <tr align="center">
 
-                                                                <td>{{ day[6] }} {{ day[0] | date('d') }}/{{ day[0] | date('m') }}/{{ day[0] | date('Y') }}</td>
-                                                                <td>{{ day[2] | date('H:i:s') }}</td>
-                                                                <td>{{ day[3] | date('H:i:s') }}</td>
-                                                                <td>{{ day[5] }}
-                                                                {% if day[1] == 1 %}
-                                                                    (dont une gratuite)
-                                                                {% elseif day[1] == 2 %}
-                                                                    (dont deux gratuites)
+                                                                <td style="text-align:right;"><span style="margin-right:15px;">{{ day['jour_arrivee_str'] }}</span> {{ day['jour_arrivee_num'] | date('d') }}/{{ day['mois_arrivee_num'] | date('m') }}/{{ data | date('Y') }}</td>
+                                                                <td>{{ day['heure_arrivee'] }}</td>
+                                                                <td>
+                                                                {% if day['jour_arrivee_num'] == day['jour_depart_num'] and day['mois_arrivee_num'] == day['mois_depart_num'] and day['annee_arrivee_num'] == day['annee_depart_num']%}
+                                                                    {{ day['heure_depart'] }}
+                                                                {% else %}
+                                                                    <span class="modal-forgot-checkout" data-toggle="tooltip" data-placement="top" 
+                                                                          title="Déconnexion oubliée - {{ day['jour_depart_num'] | date('d') }}/{{ day['mois_depart_num'] | date('m') }}/{{ data | date('Y') }} à {{ day['heure_depart'] }}">
+                                                                        00:00:00
+                                                                    </span>
+                                                                {% endif %}
+                                                                </td>
+                                                                <td style="text-align:right;">
+                                                                {% if day['demi_journees_free'] != 0 %}
+                                                                    {{ day['demi_journees'] }} <span class="modal-free-halfdays" data-toggle="tooltip" data-placement="top" title="Demi-journée{% if day['demi_journees_free'] > 1 %}s offertes{% else %} offerte{% endif %}">- {{ day['demi_journees_free'] }}</span> = {{ day['demi_journees'] - day['demi_journees_free'] }}
+                                                                {% else %}
+                                                                    {{ day['demi_journees'] }}
                                                                 {% endif %}
                                                                 </td>
                                                             </tr>
@@ -158,9 +166,23 @@
                     </td>
                     <td>{{ counterAdd - counterRemove }}</td>
                     {% if days[customer.id] * price.content < month.content %}
-                        <td>{{ days[customer.id] * price.content }} €</td>
+                        <td>
+                        {% if counterAdd - counterRemove >= - days[customer.id] %}
+                            {{ ( days[customer.id] + counterAdd - counterRemove ) * price.content }} €
+                        {% else %}
+                            0 €
+                        {% endif %}
+                        </td>
                     {% else %}
-                        <td>140 € - (Tarif mensuel appliqué)</td>
+                        <td>
+                            <span class="monthly-price">
+                                {{ month.content }} €
+                            </span>
+                            <span class="toggle-tarif-mensuel" data-toggle="tooltip" data-placement="top" 
+                                  title="Tarif mensuel appliqué au lieu de {{ ( days[customer.id] + counterAdd - counterRemove ) * price.content }} €">
+                            ?
+                            </span>
+                        </td>
                     {% endif %}
 
                 </tr>

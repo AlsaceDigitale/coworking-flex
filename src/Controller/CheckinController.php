@@ -48,22 +48,30 @@ class CheckinController extends AbstractController
      * @throws \Exception
      */
     public function checkin()
-    {
-        $checkin = new CheckIn();
+    {   
+
+        // Limit the total halfDay at 2 per customer per day
+        /* example :
+        *  customer XXX checkin at Y-m-d 12:00:00  |
+        *  customer XXX checkout at Y-m-d 12:10:00 |-> +1 halfDay
+        *  customer XXX checkin at Y-m-d 12:11:00  |
+        *  customer XXX checkout at Y-m-d 12:21:00 |-> +1 halfDay 
+        *  customer XXX checkin at Y-m-d 12:22:00  |
+        *  customer XXX checkout at Y-m-d 12:32:00 |-> +1 halfDay
+        * 
+        *  total : 3 halfDays in the same day
+        *  => take total=sum(halfDays) per customer_id for days in the checkins
+        *     and if halfday_count>=2 then set the others to 0.
+        * 
+        *  look at the findByHalfDayCount[---] functions in the CheckinRepository for more informations
+        */
+
         $datetime = new \DateTime();
-        $checkin->setCustomer($this->getUser())
-            ->setArrival($datetime)
-            ->setArrivalDate($datetime->format('Y-m-d'))
-            ->setArrivalMonth($datetime->format('Y-m'));
-        $this->manager->persist($checkin);
-        $this->manager->flush();
-
-        $this->addFlash(
-            'arrival',
-            'Bonne baignade '
-        );
-
         $verifs=$this->checkInRepository->findByEmptyLeaving($datetime->format('Y-m-d'));
+
+        /*
+        * Check if the customer has an other checkin that hasn't been checked out 
+        */
         if ($verifs) {
             foreach ($verifs as $verif) {
                 $checkout = $this->checkInRepository->findOneBy([
@@ -76,17 +84,30 @@ class CheckinController extends AbstractController
                 $interval = $checkout->getArrival()
                     ->diff($checkout->getLeaving());
                 $checkout->setDiff(new \DateTime($interval->format('%h:%i:%s')));
-                $time = $interval->format('%h');
+                $time_hours = $interval->format('%h');
+                $time_min = $interval->format('%i');
                 $timeDay = $interval->format('%d');
-                if ($time < 4 && $timeDay == 0) {
-                    $checkout ->setHalfDay(1);
+
+                if ($halfday_count >= 2) {
+                    /*
+                    * Limit the total number of halfdays in the case where a customer forget to checkout 
+                    */
+                    $checkin->setHalfDay(0);
+                } elseif ($time_hours <= 4 && $time_min <= 30 && $timeDay == 0) {
+                    /*
+                    * If the difference (checkout-checkin) <= 4h30 : setHalfDay(1)
+                    */
+                    $checkout->setHalfDay(1);
                     if ($promo->getCounter() > 0) {
                         $checkout->setFree(1);
                         $promo->setCounter($promo->getCounter()-1);
                     } else {
                         $checkout->setFree(0);
                     }
-                } else {
+                } elseif ($time_hours >= 4 && $time_min > 30) {
+                    /*
+                    * If the difference (checkout-checkin) > 4h30 : setHalfDay(2)
+                    */
                     $checkout->setHalfDay(2);
                     if ($promo->getCounter() == 1) {
                         $checkout->setFree(1);
@@ -103,7 +124,21 @@ class CheckinController extends AbstractController
                 $this->manager->flush();
             }
         }
-        $verif=$this->checkInRepository->findByEmptyLeaving($datetime->format('Y-m-d'));
+
+        $checkin = new CheckIn();
+        $checkin->setCustomer($this->getUser())
+            ->setArrival($datetime)
+            ->setArrivalDate($datetime->format('Y-m-d'))
+            ->setArrivalMonth($datetime->format('Y-m'));
+        $this->manager->persist($checkin);
+        $this->manager->flush();
+
+        $this->addFlash(
+            'arrival',
+            'Bonne baignade '
+        );
+
+
         return $this->redirectToRoute('user_home');
     }
 
@@ -114,24 +149,56 @@ class CheckinController extends AbstractController
      */
     public function checkout()
     {
+        
+        // Limit the total halfDay at 2 per customer per day
+        /* example :
+        *  customer XXX checkin at Y-m-d 12:00:00  |
+        *  customer XXX checkout at Y-m-d 12:10:00 |-> +1 halfDay
+        *  customer XXX checkin at Y-m-d 12:11:00  |
+        *  customer XXX checkout at Y-m-d 12:21:00 |-> +1 halfDay 
+        *  customer XXX checkin at Y-m-d 12:22:00  |
+        *  customer XXX checkout at Y-m-d 12:32:00 |-> +1 halfDay
+        * 
+        *  total : 3 halfDays in the same day
+        *  => take total=sum(halfDays) per customer_id for days in the checkins
+        *     and if halfday_count>=2 then set the others to 0.
+        * 
+        *  look at the findByHalfDayCount[---] functions in the CheckinRepository for more informations
+        */
+
+        $datetime = new \DateTime();
+        $customer = $this->getUser();
+        $halfday_count = $this->checkInRepository->findByHalfDayCountForCustomer($datetime->format('Y-m-d'),$customer->getId());
+
         $checkin = $this->checkInRepository->findOneBy(['customer' => $this->getUser(), 'leaving' => null]);
         $promo = $this->promoRepository->findOneBy(['customer' => $this->getUser()]);
-        $checkin->setLeaving(new \DateTime());
+        $checkin->setLeaving($datetime);
         $interval = $checkin->getArrival()->diff($checkin->getLeaving());
         $checkin->setDiff(new \DateTime($interval->format('%h:%i:%s')));
-        $time = $interval->format('%h');
+        $time_hours = $interval->format('%h');
+        $time_min = $interval->format('$i');
         $timeDay = $interval->format('%d');
 
-
-        if ($time < 4 && $timeDay == 0) {
-            $checkin ->setHalfDay(1);
+        if ($halfday_count >= 2) {
+            /*
+            * Limit the total number of halfdays in the case where a customer forget to checkout 
+            */
+            $checkin->setHalfDay(0);
+        } elseif ($time_hours <= 4 && $time_min <= 30 && $timeDay == 0) {
+            /*
+            * If the difference (checkout-checkin) <= 4h30 : setHalfDay(1)
+            */
+            $checkin->setHalfDay(1);
             if ($promo->getCounter() > 0) {
                 $checkin->setFree(1);
                 $promo->setCounter($promo->getCounter()-1);
             } else {
                 $checkin->setFree(0);
             }
-        } else {
+        } elseif ($time_hours >= 4 && $time_min > 30) {
+            /*
+            * If the difference (checkout-checkin) > 4h30 : setHalfDay(2)
+            */
             $checkin->setHalfDay(2);
             if ($promo->getCounter() == 1) {
                 $checkin->setFree(1);
@@ -143,7 +210,6 @@ class CheckinController extends AbstractController
                 $checkin->setFree(0);
             }
         }
-
 
         $this->manager->persist($checkin);
         $this->manager->persist($promo);
