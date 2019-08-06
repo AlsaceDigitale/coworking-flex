@@ -88,6 +88,8 @@ class CheckinController extends AbstractController
                 $time_min = $interval->format('%i');
                 $timeDay = $interval->format('%d');
 
+                $halfday_count = $this->checkInRepository->findByHalfDayCountForCustomer($datetime->format('Y-m-d'),$this->getUser()->getId());
+
                 if ($halfday_count >= 2) {
                     /*
                     * Limit the total number of halfdays in the case where a customer forget to checkout 
