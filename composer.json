@@ -83,7 +83,8 @@
     "extra": {
       "paas": {
         "engines": {
-          "nginx": "1.15.8"
+          "nginx": "1.15.8",
+          "php-config": ["date.timezone=Europe/Paris"]
         }
       },
         "symfony": {
