@@ -168,7 +168,7 @@ class CheckinController extends AbstractController
             $customer = $checkin->getCustomer();
             
             $halfday_count = $this->checkInRepository->findByHalfDayCountForCustomer($yesterday_midnight->format('Y-m-d'),$customer->getId());
-            $promo = $this->promoRepository->findOneBy(['customer' => $this->getUser()]);
+            $promo = $this->promoRepository->findOneBy(['customer' => $customer]);
             $checkin->setLeaving($yesterday_midnight);
 
             $duree = $checkin->getArrival()->diff($checkin->getLeaving());
