@@ -369,13 +369,26 @@ class AdminController extends AbstractController
      */
     public function price(OptionsRepository $optionsRepository, Request $request)
     {
+        $checkins = $this->checkInRepository->findAll();
+        $dates = [];
+
+        foreach ($checkins as $key => $checkin) {
+            $date = $checkin->getArrival()->format('Y-m');
+            if (!in_array($date, $dates)) {
+                $dates[] = $date;
+            }
+        }
 
         $data = 0;
         if (!empty($_POST)) {
             $data = $_POST['searchMonth'];
         }
+        elseif(count($dates) > 0)
+        {
+            $data = end($dates);
+        }
 
-        $checkins = $this->checkInRepository->findBy([
+        $é = $this->checkInRepository->findBy([
             'arrival_month' => $data
         ]);
 
@@ -437,18 +450,6 @@ class AdminController extends AbstractController
 
 
         // !!!!!!!!!!!!!!!!!!!!   recherche par mois
-
-
-        $checkins = $this->checkInRepository->findAll();
-        $dates = [];
-
-        foreach ($checkins as $key => $checkin) {
-            $date = $checkin->getArrival()->format('Y-m');
-            if (!in_array($date, $dates)) {
-                $dates[] = $date;
-            }
-        }
-
         $jours = [
             'Mon' => 'Lundi',
             'Tue' => 'Mardi',

@@ -13,11 +13,11 @@
     <div class="container">
         <h1 class="text-primary" style="text-align: center">Facturation</h1>
 
-        <form class="input-group mb-3" method="post">
+        <form class="input-group mb-3" id="searchMonthForm" method="post">
             <select name="searchMonth" class="custom-select" id="searchMonth" aria-label="Example select with button addon">
                 <option selected>Choisir un mois </option>
                     {% for date in dates %}
-                        <option value="{{ date }}">{{ change[date | date('m')] }} {{ date | date('Y') }}</option>
+                        <option value="{{ date }}"{% if data == date %} selected="selected"{% endif %}>{{ change[date | date('m')] }} {{ date | date('Y') }}</option>
                     {% endfor %}
             </select>
             <div class="input-group-prepend">
@@ -278,6 +278,10 @@
                 $("#ajustement_customerFIRSTNAME").html($(this).data('customer-firstname'));
                 var adjust_result = $(this).data('counter-add') - $(this).data('counter-remove');
                 $("#adjust_result").html(adjust_result);
+            });
+
+            $('#searchMonth').on('change', function() {
+                $('#searchMonthForm').submit();
             });
         });
     </script>
