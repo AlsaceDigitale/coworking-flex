@@ -18,33 +18,4 @@ class HalfDayAdjustmentRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, HalfDayAdjustment::class);
     }
-
-    // /**
-    //  * @return HalfDayAdjustment[] Returns an array of HalfDayAdjustment objects
-    //  */
-    /*
-    public function findByExampleField($value)
-    {
-        return $this->createQueryBuilder('h')
-            ->andWhere('h.exampleField = :val')
-            ->setParameter('val', $value)
-            ->orderBy('h.id', 'ASC')
-            ->setMaxResults(10)
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-    */
-
-    /*
-    public function findOneBySomeField($value): ?HalfDayAdjustment
-    {
-        return $this->createQueryBuilder('h')
-            ->andWhere('h.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
-    }
-    */
 }

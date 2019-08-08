@@ -92,7 +92,7 @@ class CheckinController extends AbstractController
         $checkin = $this->checkInRepository->findOneBy(['customer' => $this->getUser(), 'leaving' => null]);
         $promo = $this->promoRepository->findOneBy(['customer' => $this->getUser()]);
 
-        // Si il y a bien un checkin sans checkout (leaving) --> else : erreur double checkout
+        // Si il y a bien un checkin sans checkout (leaving)
         if (isset($checkin)) {
             $checkin->setLeaving($datetime);
             $interval = $checkin->getArrival()->diff($checkin->getLeaving());

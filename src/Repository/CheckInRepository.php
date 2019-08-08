@@ -23,19 +23,6 @@ class CheckInRepository extends ServiceEntityRepository
      * @param $date
      * @return mixed
      */
-    public function findByTodayEmptyLeaving($date)
-    {
-        return $this->createQueryBuilder('c')
-            ->andWhere('c.arrivalDate LIKE :date', 'c.leaving is NULL')
-            ->setParameter('date', '%'.$date.'%')
-            ->getQuery()
-            ->getResult();
-    }
-
-    /**
-     * @param $date
-     * @return mixed
-     */
     public function findByPreviousEmptyLeaving($date)
     {
         return $this->createQueryBuilder('c')
@@ -61,23 +48,6 @@ class CheckInRepository extends ServiceEntityRepository
      * @return mixed
      */
     public function findByDoublonsCheckin($id,$date)
-    {
-        return $this->createQueryBuilder('c')
-            ->andWhere('c.customer = :id', 'c.arrivalDate LIKE :date', 'c.leaving is NULL')
-            ->orderBy('c.arrivalDate', 'DESC')
-            ->setParameter('id',$id)
-            ->setParameter('date','%'.$date.'%')
-            ->getQuery()
-            ->getResult()
-        ;
-    }
-
-    /**
-     * @param $id
-     * @param $date
-     * @return mixed
-     */
-    public function findByDoublonsCheckout($id,$date)
     {
         return $this->createQueryBuilder('c')
             ->andWhere('c.customer = :id', 'c.arrivalDate LIKE :date', 'c.leaving is NULL')
@@ -150,16 +120,4 @@ class CheckInRepository extends ServiceEntityRepository
             ->getSingleScalarResult();
         return (int)$halfday_count;
     }
-
-    /*
-    public function findOneBySomeField($value): ?CheckIn
-    {
-        return $this->createQueryBuilder('c')
-            ->andWhere('c.exampleField = :val')
-            ->setParameter('val', $value)
-            ->getQuery()
-            ->getOneOrNullResult()
-        ;
-    }
-    */
 }
