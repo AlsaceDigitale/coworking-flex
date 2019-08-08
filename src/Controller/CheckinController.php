@@ -161,15 +161,17 @@ class CheckinController extends AbstractController
      */
     public function globalcheckout()
     {
+        $today_midnight = new \DateTime("today midnight");
+
         $yesterday_midnight = new \DateTime("yesterday midnight");
         $all_empty_leaving = $this->checkInRepository->findByPreviousEmptyLeaving($yesterday_midnight->format('Y-m-d'));
-        
+
         foreach ($all_empty_leaving as $checkin) {
             $customer = $checkin->getCustomer();
-            
+
             $halfday_count = $this->checkInRepository->findByHalfDayCountForCustomer($yesterday_midnight->format('Y-m-d'),$customer->getId());
             $promo = $this->promoRepository->findOneBy(['customer' => $customer]);
-            $checkin->setLeaving($yesterday_midnight);
+            $checkin->setLeaving($today_midnight);
 
             $duree = $checkin->getArrival()->diff($checkin->getLeaving());
             $checkin->setDiff(new \DateTime($duree->format('%h:%i:%s')));
