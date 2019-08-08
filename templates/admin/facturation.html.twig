@@ -30,12 +30,15 @@
             <h2 class="text-primary" style="text-align: center">Détail du mois de {{ change[data | date('m')] }} {{ data | date('Y') }} </h2>
         {% endif %}
 
+        <a href="{{ path('admin_home') }}" class="btn btn-primary btn-lg active mb-5" role="button" aria-pressed="true">Retour</a>
+
         <table id="table_id" class="display table-hover">
             <thead>
             <tr class="text-primary" align="center">
                 <th>Nom</th>
                 <th>Prénom</th>
                 <th>Mail</th>
+                <th>Société</th>
                 <th>Statut</th>
                 <th>Présence (demi-journées)</th>
                 <th>Ajustement</th>
@@ -50,6 +53,7 @@
                     <td>{{ customer.lastname }}</td>
                     <td>{{ customer.firstname }}</td>
                     <td>{{ customer.mail }}</td>
+                    <td>{{ customer.society }}</td>
                     <td>{% if customer.status is null or customer.status is empty %} - {% else %} {{ customer.status }} {% endif %}</td>
                     <td>{% set table = all_checkins[customer.id] %}
                         {% set adjustments = all_adjustments[customer.id] %}

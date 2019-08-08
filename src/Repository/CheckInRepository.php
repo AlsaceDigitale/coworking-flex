@@ -19,6 +19,32 @@ class CheckInRepository extends ServiceEntityRepository
         parent::__construct($registry, CheckIn::class);
     }
 
+    /**
+     * @param $date
+     * @return mixed
+     */
+    public function findByTodayEmptyLeaving($date)
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.arrivalDate LIKE :date', 'c.leaving is NULL')
+            ->setParameter('date', '%'.$date.'%')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @param $date
+     * @return mixed
+     */
+    public function findByPreviousEmptyLeaving($date)
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.arrivalDate <= :date', 'c.leaving is NULL')
+            ->setParameter('date', $date)
+            ->getQuery()
+            ->getResult();
+    }
+
     public function findByEmptyLeaving($date)
     {
         return $this->createQueryBuilder('c')
@@ -27,6 +53,40 @@ class CheckInRepository extends ServiceEntityRepository
             // ->setParameter('date', $date)
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * @param $id
+     * @param $date
+     * @return mixed
+     */
+    public function findByDoublonsCheckin($id,$date)
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.customer = :id', 'c.arrivalDate LIKE :date', 'c.leaving is NULL')
+            ->orderBy('c.arrivalDate', 'DESC')
+            ->setParameter('id',$id)
+            ->setParameter('date','%'.$date.'%')
+            ->getQuery()
+            ->getResult()
+        ;
+    }
+
+    /**
+     * @param $id
+     * @param $date
+     * @return mixed
+     */
+    public function findByDoublonsCheckout($id,$date)
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.customer = :id', 'c.arrivalDate LIKE :date', 'c.leaving is NULL')
+            ->orderBy('c.arrivalDate', 'DESC')
+            ->setParameter('id',$id)
+            ->setParameter('date','%'.$date.'%')
+            ->getQuery()
+            ->getResult()
+        ;
     }
 
     /**
