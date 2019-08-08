@@ -388,7 +388,7 @@ class AdminController extends AbstractController
             $data = end($dates);
         }
 
-        $é = $this->checkInRepository->findBy([
+        $checkins = $this->checkInRepository->findBy([
             'arrival_month' => $data
         ]);
 
