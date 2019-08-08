@@ -19,15 +19,44 @@ class CheckInRepository extends ServiceEntityRepository
         parent::__construct($registry, CheckIn::class);
     }
 
-    public function findByEmptyLeaving($date)
+    /**
+     * @param $date
+     * @return mixed
+     */
+    public function findByPreviousEmptyLeaving($date)
     {
-
         return $this->createQueryBuilder('c')
-            ->andWhere('c.leaving IS NULL')
-            ->andWhere('c.arrivalDate != :date')
+            ->andWhere('c.arrivalDate <= :date', 'c.leaving is NULL')
             ->setParameter('date', $date)
             ->getQuery()
             ->getResult();
+    }
+
+    public function findByEmptyLeaving($date)
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.leaving IS NULL')
+            // ->andWhere('c.arrivalDate != :date')
+            // ->setParameter('date', $date)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * @param $id
+     * @param $date
+     * @return mixed
+     */
+    public function findByDoublonsCheckin($id,$date)
+    {
+        return $this->createQueryBuilder('c')
+            ->andWhere('c.customer = :id', 'c.arrivalDate LIKE :date', 'c.leaving is NULL')
+            ->orderBy('c.arrivalDate', 'DESC')
+            ->setParameter('id',$id)
+            ->setParameter('date','%'.$date.'%')
+            ->getQuery()
+            ->getResult()
+        ;
     }
 
     /**
@@ -46,15 +75,49 @@ class CheckInRepository extends ServiceEntityRepository
         ;
     }
 
-    /*
-    public function findOneBySomeField($value): ?CheckIn
+    /**
+     * @param $selected_month
+     * @return mixed
+     * @desc return a array that feets with this example : 
+     *       
+     *      $all_halfdays_counts = $this->checkInRepository->findByHalfDayCount('2019-07');
+     *  
+     *  then, we have : 
+     * 
+     *      $user_halfdays_counts = $all_halfdays_counts[$customer_id];
+     *      $user_halfdays_counts[$day (within the the selected_month)] = 4 (if the user has a total of 4 halfdays during this $day)
+     *  
+     *  this function is used in the CheckinController to limit by 2 the total number of halfdays of a customer in a day
+     */
+    public function findByHalfDayCount($selected_month)
     {
         return $this->createQueryBuilder('c')
-            ->andWhere('c.exampleField = :val')
-            ->setParameter('val', $value)
+            ->select('IDENTITY(c.customer)', 'c.arrivalDate', 'SUM(c.halfDay)')
+            ->andWhere('c.arrival_month LIKE :selected_month')
+            ->groupBy('c.customer')
+            ->addGroupBy('c.arrivalDate')
+            ->setParameter('selected_month', $selected_month.'%')
             ->getQuery()
-            ->getOneOrNullResult()
+            ->getResult();
         ;
     }
-    */
+
+    /**
+     * @param $selected_month
+     * @return integer
+     * @desc return SUM(halfDays) from the checkIn table, 
+     *       where the customer is given by his Id and the day is given with the 'Y-m-d' format.
+     */
+    public function findByHalfDayCountForCustomer($selected_day,$customer_id)
+    {
+        $halfday_count = $this->createQueryBuilder('c')
+            ->select('SUM(c.halfDay)')
+            ->andWhere('c.arrivalDate LIKE :selected_day')
+            ->andWhere('c.customer = :customer_id')
+            ->setParameter('selected_day', $selected_day.'%')
+            ->setParameter('customer_id', $customer_id)
+            ->getQuery()
+            ->getSingleScalarResult();
+        return (int)$halfday_count;
+    }
 }

@@ -46,3 +46,76 @@ h1, h2, h3, h4, h5 {
     top: 38.9vh;
     z-index: 10;
 }
+
+.btn-adjust {
+    border-width: 0 1px 1px 1px!important;
+    border: solid #158CBA;
+    background: rgb(240, 240, 240);
+    color: #158CBA;
+    transition-property: background, color;
+    transition-duration: .5s;
+    transition-delay: .1s;
+}
+.btn-adjust:hover {
+    background: #158CBA;
+    color: rgb(240, 240, 240);
+}
+
+.btn-halfdays {
+    position: relative;
+}
+
+.notif-free {
+    position: absolute!important;
+    transform: translate(-107%,-14%);
+    top: -5px!important;
+    font-size: 14px;
+    background: rgb(124, 222, 132);
+    display: block;
+    height: 22px;
+    border-radius: 50%;
+}
+
+.modal-free-halfdays {
+    background: rgb(240, 240, 240);
+    border-radius: 20%;
+    padding: 5px 5px;
+    cursor:pointer;
+}
+
+.modal-forgot-checkout {
+    background: rgb(240, 240, 240);
+    border-radius: 5%;
+    padding: 5px 5px;
+    cursor:pointer;
+    color:rgb(150, 0, 0);
+}
+
+.toggle-tarif-mensuel {
+    position: absolute!important;
+    transform: translate(-20%,-50%);
+    background: rgb(240, 240, 240);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 50%;
+    cursor:pointer;
+    padding-left: 6px;
+    padding-right: 6px;
+    font-weight: bold;
+    font-size: 11px;
+    transition-property: background, color;
+    transition-duration: .5s;
+    transition-delay: .1s;
+}
+
+.toggle-tarif-mensuel:hover {
+    background: rgb(140,140,140);
+    /* background: rgb(124, 222, 132); */
+    color: rgba(240,240,240);
+}
+
+.monthly-price {
+    background:rgb(124, 222, 132);
+    padding: 5px;
+    border-radius:20%;
+    cursor:pointer;
+}

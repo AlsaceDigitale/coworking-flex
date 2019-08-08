@@ -3,6 +3,9 @@
 namespace App\Controller;
 
 use App\Entity\Customer;
+use App\Entity\HalfDayAdjustment;
+use App\Form\HalfDayAdjustmentType;
+use App\Repository\HalfDayAdjustmentRepository;
 use App\Form\CustomerSettingsAccountType;
 use App\Form\CustomerSettingsPasswordType;
 use App\Form\CustomerSettingsProfileType;
@@ -38,6 +41,7 @@ class AdminController extends AbstractController
     private $subscriptionRepository;
     private $optionsRepository;
     private $promoRepository;
+    private $halfDayAdjustmentRepository;
     private $om;
 
     public function __construct(
@@ -46,6 +50,7 @@ class AdminController extends AbstractController
         SubscriptionRepository $subscriptionRepository,
         OptionsRepository $optionsRepository,
         PromoRepository $promoRepository,
+        HalfDayAdjustmentRepository $halfDayAdjustmentRepository,
         ObjectManager $om
     ) {
         $this->checkInRepository=$checkInRepository;
@@ -53,6 +58,7 @@ class AdminController extends AbstractController
         $this->subscriptionRepository=$subscriptionRepository;
         $this->optionsRepository=$optionsRepository;
         $this->promoRepository=$promoRepository;
+        $this->halfDayAdjustmentRepository=$halfDayAdjustmentRepository;
         $this->om=$om;
     }
 
@@ -123,7 +129,7 @@ class AdminController extends AbstractController
         );
         if ($customer->getActive() == 0) {
             $customer->setActive(1);
-            $promo->setCounter($promo->getCounter() + 4);
+            $promo->setCounter($promo->getCounter() + 0);
         } else {
             $customer->setActive(0);
         }
@@ -369,38 +375,44 @@ class AdminController extends AbstractController
             $data = $_POST['searchMonth'];
         }
 
-        $halfdays = $this->checkInRepository->findBy([
+        $checkins = $this->checkInRepository->findBy([
             'arrival_month' => $data
         ]);
 
         $days = [];
         $free= [];
         $customers = [];
-        foreach ($halfdays as $key => $halfday) {
+        $count_attendance = [];
+        foreach ($checkins as $key => $checkin) {
             $customer = $this->customerRepository->findOneBy([
                 'role' => 'ROLE_USER',
-                'id' => $halfday->getCustomer()
+                'id' => $checkin->getCustomer()
             ]);
-            $id = $customer->getId();
+            $customer_id = $customer->getId();
 
-            if ($halfday->getHalfDay() == 1) {
-                if (isset($days[$id])) {
-                    $days[$id] += 1;
+            if ($checkin->getHalfDay() == 1) {
+                if (isset($days[$customer_id])) {
+                    $days[$customer_id] += 1;
                 } else {
-                    $days[$id] = 1;
+                    $days[$customer_id] = 1;
                 }
-            } else {
-                if (isset($days[$id])) {
-                    $days[$id] += 2;
+            } elseif ($checkin->getHalfDay() == 2) {
+                if (isset($days[$customer_id])) {
+                    $days[$customer_id] += 2;
                 } else {
-                    $days[$id] = 2;
+                    $days[$customer_id] = 2;
                 }
-            }
-            $days[$id] -= $halfday->getFree();
-            if (isset($free[$id])) {
-                $free[$id] += $halfday->getFree();
+            } elseif ($checkin->getHalfDay() == 0) {
+                if (!isset($days[$customer_id])) {
+                    $days[$customer_id] = 0; 
+                }
+            };
+            
+            $days[$customer_id] -= $checkin->getFree();
+            if (isset($free[$customer_id])) {
+                $free[$customer_id] += $checkin->getFree();
             } else {
-                $free[$id] = $halfday->getFree();
+                $free[$customer_id] = $checkin->getFree();
             }
 
 
@@ -455,8 +467,8 @@ class AdminController extends AbstractController
             'label' => 'Month'
         ])->getContent();
 
+        // For the detailed display of the customer's checkins in the facturation table  
         $all_checkins = [];
-
         foreach ($customers as $key => $customer) {
             $user_checkins = $this->checkInRepository->findBy(
                 ['customer' => $customer, 'arrival_month' => $data],
@@ -465,6 +477,7 @@ class AdminController extends AbstractController
 
             $tab = [];
             foreach ($user_checkins as $key => $checkin) {
+                ## Customer's attendance card header [Mois Annee - Facture€] ##
                 $prix = 0;
                 $arrivee = $checkin->getArrival();
                 $annee = $arrivee->format('Y');
@@ -475,19 +488,59 @@ class AdminController extends AbstractController
                 if ($prix>$monthPrice) {
                     $prix = $monthPrice;
                 }
-                $jour = $jours[$arrivee->format('D')];
-                $depart = $checkin->getLeaving();
-                $difference = $checkin->getDiff();
-                $demijournee = $checkin->getHalfDay();
-                $gratuit = $checkin->getFree();
-                $date_cplt = $arrivee->format('Y-m-d');
-                $line = $month[$mois] . ' ' . $annee.' - '.$prix.'€';
+                $line = $month[$mois] . ' ' . $annee;
 
-                $tab[$line][] = [$date_cplt, $gratuit, $arrivee, $depart, $difference, $demijournee, $jour];
+                ## Customer's attendance card body [Arrivee (jj-mm-aaaa hh:mm:ss) | Depart (jj-mm-aaaa hh:mm:ss) | Demi-Journées (int)] ##
+                $Arrivee = $checkin->getArrival();
+                $Jour_arrivee_str = $jours[$Arrivee->format('D')];
+                $Jour_arrivee_num = $Arrivee->format('d');
+                $Mois_arrivee_num = $Arrivee->format('m');
+                $Annee_arrivee_num = $Arrivee->format('Y');
+                $Heure_arrivee = $Arrivee->format('H:i:s');
+                
+                $Depart = $checkin->getLeaving();
+                if($Depart != null)
+                {
+                    $Jour_depart_str = $jours[$Depart->format('D')];
+                    $Jour_depart_num = $Depart->format('d');
+                    $Mois_depart_num = $Depart->format('m');
+                    $Annee_depart_num = $Depart->format('Y');
+                    $Heure_depart = $Depart->format('H:i:s');
+                }
+                else
+                {
+                    $Jour_depart_str = null;
+                    $Jour_depart_num = null;
+                    $Mois_depart_num = null;
+                    $Annee_depart_num = null;
+                    $Heure_depart = null;
+                }
+
+                $Demijournees = $checkin->getHalfDay();
+                $Demijournees_offertes = $checkin->getFree();
+                
+                $Difference_depart_arrivee = $checkin->getDiff();
+                $tab[$line][] = [
+                    'jour_arrivee_str' => $Jour_arrivee_str,
+                    'jour_arrivee_num' => $Jour_arrivee_num,
+                    'mois_arrivee_num' => $Mois_arrivee_num,
+                    'annee_arrivee_num' => $Annee_arrivee_num,
+                    'heure_arrivee' => $Heure_arrivee,
+                    'jour_depart_str' => $Jour_depart_str,
+                    'jour_depart_num' => $Jour_depart_num,
+                    'mois_depart_num' => $Mois_depart_num,
+                    'annee_depart_num' => $Annee_depart_num,
+                    'heure_depart' => $Heure_depart,
+                    'demi_journees' => $Demijournees,
+                    'demi_journees_free' => $Demijournees_offertes,
+                    'diff_depart_arrivee' => $Difference_depart_arrivee
+                ];
             }
             $all_checkins[$customer->getId()] = $tab;
         }
 
+
+        // Sophie's wink ;)
         $song_sophie = [
             1 => 'Du temps de votre vie,',
             2 => 'Vous vous appeliez Sophie',
@@ -503,6 +556,26 @@ class AdminController extends AbstractController
             'date' => 1947
         ];
 
+        // In order to adjust the total amount of halfdays of a customer during the selected month
+        $ajustement = new HalfDayAdjustment();
+
+        $formHalfDayAdjustment = $this->createForm(HalfDayAdjustmentType::class, $ajustement);
+        $formHalfDayAdjustment->handleRequest($request);
+
+        if ($formHalfDayAdjustment->isSubmitted() && $formHalfDayAdjustment->isValid()) {
+            $this->om->persist($ajustement);
+            $this->om->flush();
+        }
+
+        $all_adjustments = [];
+
+        foreach ($customers as $key => $customer) {
+            $all_adjustments[$customer->getId()] = $this->halfDayAdjustmentRepository->findOneBy(
+                ['customer_id' => $customer->getId(), 'arrival_month' => $data],
+                ['id' => 'DESC']
+            );
+        };
+        
         return $this->render(
             'admin/facturation.html.twig',
             [
@@ -520,7 +593,9 @@ class AdminController extends AbstractController
                 'free' => $free,
                 'all_checkins' => $all_checkins,
                 'song_sophie' => $song_sophie,
-                'song_explain' => $song_explain
+                'song_explain' => $song_explain,
+                'formHalfDayAdjustment' => $formHalfDayAdjustment->createView(),
+                'all_adjustments' => $all_adjustments
             ]
         );
     }

@@ -48,9 +48,22 @@ class CheckinController extends AbstractController
      * @throws \Exception
      */
     public function checkin()
-    {
+    {   
+        $datetime = new \DateTime;
+        $customer = $this->getUser();
         $checkin = new CheckIn();
-        $datetime = new \DateTime();
+
+        // Traitement erreur double checkin meme user meme journee
+        $doublons = $this->checkInRepository->findByDoublonsCheckin($customer->getId(),$datetime->format('Y-m-d'));
+        if ($doublons) {
+            $this->addFlash(
+                'error_checkin',
+                'On sait que vous êtes là ! Pas la peine de le répéter ... '
+            );
+            return $this->redirectToRoute('user_home');
+        }
+
+        // Checkin a proprement parler si pas de doublons 
         $checkin->setCustomer($this->getUser())
             ->setArrival($datetime)
             ->setArrivalDate($datetime->format('Y-m-d'))
@@ -60,50 +73,8 @@ class CheckinController extends AbstractController
 
         $this->addFlash(
             'arrival',
-            'Bonne baignade '
+            'Bonne journée ! '
         );
-
-        $verifs=$this->checkInRepository->findByEmptyLeaving($datetime->format('Y-m-d'));
-        if ($verifs) {
-            foreach ($verifs as $verif) {
-                $checkout = $this->checkInRepository->findOneBy([
-                    'customer' => $verif->getCustomer(),
-                    'leaving' => null]);
-                $promo = $this->promoRepository->findOneBy([
-                    'customer' => $verif->getCustomer()
-                ]);
-                $checkout->setLeaving(new \DateTime());
-                $interval = $checkout->getArrival()
-                    ->diff($checkout->getLeaving());
-                $checkout->setDiff(new \DateTime($interval->format('%h:%i:%s')));
-                $time = $interval->format('%h');
-                $timeDay = $interval->format('%d');
-                if ($time < 4 && $timeDay == 0) {
-                    $checkout ->setHalfDay(1);
-                    if ($promo->getCounter() > 0) {
-                        $checkout->setFree(1);
-                        $promo->setCounter($promo->getCounter()-1);
-                    } else {
-                        $checkout->setFree(0);
-                    }
-                } else {
-                    $checkout->setHalfDay(2);
-                    if ($promo->getCounter() == 1) {
-                        $checkout->setFree(1);
-                        $promo->setCounter($promo->getCounter()-1);
-                    } elseif ($promo->getCounter() > 1) {
-                        $checkout->setFree(2);
-                        $promo->setCounter($promo->getCounter()-2);
-                    } else {
-                        $checkout->setFree(0);
-                    }
-                }
-                $this->manager->persist($checkout);
-                $this->manager->persist($promo);
-                $this->manager->flush();
-            }
-        }
-        $verif=$this->checkInRepository->findByEmptyLeaving($datetime->format('Y-m-d'));
         return $this->redirectToRoute('user_home');
     }
 
@@ -114,45 +85,133 @@ class CheckinController extends AbstractController
      */
     public function checkout()
     {
+        $datetime = new \DateTime();
+        $customer = $this->getUser();
+
+        $halfday_count = $this->checkInRepository->findByHalfDayCountForCustomer($datetime->format('Y-m-d'),$customer->getId());
         $checkin = $this->checkInRepository->findOneBy(['customer' => $this->getUser(), 'leaving' => null]);
         $promo = $this->promoRepository->findOneBy(['customer' => $this->getUser()]);
-        $checkin->setLeaving(new \DateTime());
-        $interval = $checkin->getArrival()->diff($checkin->getLeaving());
-        $checkin->setDiff(new \DateTime($interval->format('%h:%i:%s')));
-        $time = $interval->format('%h');
-        $timeDay = $interval->format('%d');
 
+        // Si il y a bien un checkin sans checkout (leaving)
+        if (isset($checkin)) {
+            $checkin->setLeaving($datetime);
+            $interval = $checkin->getArrival()->diff($checkin->getLeaving());
+            $checkin->setDiff(new \DateTime($interval->format('%h:%i:%s')));
+            $time_hours = $interval->format('%h');
+            $time_min = $interval->format('%i');
+            $timeDay = $interval->format('%d');
 
-        if ($time < 4 && $timeDay == 0) {
-            $checkin ->setHalfDay(1);
-            if ($promo->getCounter() > 0) {
-                $checkin->setFree(1);
-                $promo->setCounter($promo->getCounter()-1);
-            } else {
+            if ($halfday_count >= 2) {
+                /*
+                * Limit the total number of halfdays in the case where a customer forget to checkout 
+                */
+                $checkin->setHalfDay(0);
                 $checkin->setFree(0);
-            }
-        } else {
-            $checkin->setHalfDay(2);
-            if ($promo->getCounter() == 1) {
-                $checkin->setFree(1);
-                $promo->setCounter($promo->getCounter()-1);
-            } elseif ($promo->getCounter() > 1) {
-                $checkin->setFree(2);
-                $promo->setCounter($promo->getCounter()-2);
+            } elseif ($time_hours <= 4 && $time_min <= 30 && $timeDay == 0) {
+                /*
+                * If the difference (checkout-checkin) <= 4h30 : setHalfDay(1)
+                */
+                $checkin->setHalfDay(1);
+                if ($promo->getCounter() == 1) {
+                    $checkin->setFree(1);
+                    $promo->setCounter($promo->getCounter()-1);
+                } elseif ($promo->getCounter() > 1) {
+                    $checkin->setFree(2);
+                    $promo->setCounter($promo->getCounter()-2);
+                } else {
+                    $checkin->setFree(0);
+                }
             } else {
-                $checkin->setFree(0);
+                $checkin->setHalfDay(2);
+                if ($promo->getCounter() == 1) {
+                    $checkin->setFree(1);
+                    $promo->setCounter($promo->getCounter()-1);
+                } elseif ($promo->getCounter() > 1) {
+                    $checkin->setFree(2);
+                    $promo->setCounter($promo->getCounter()-2);
+                } else {
+                    $checkin->setFree(0);
+                }
             }
-        }
+            $this->manager->persist($checkin);
+            $this->manager->persist($promo);
+            $this->manager->flush();
 
+            $this->addFlash(
+                'bye',
+                'A la prochaine '
+            );
 
-        $this->manager->persist($checkin);
-        $this->manager->persist($promo);
-        $this->manager->flush();
+            return $this->redirectToRoute('user_home');
+        } 
 
+        // Traitement erreur double checkin meme user meme journee
         $this->addFlash(
-            'bye',
-            'A la prochaine '
-        );
+            'error_checkout',
+            'Vous êtes déjà parti ! Mais revenez vite, on vous attend ... '
+        ); 
+
+        return $this->redirectToRoute('user_home');
+    }
+
+    /**
+     * @Route("/global-checkout", name="global_checkout")
+     * @return \Symfony\Component\HttpFoundation\RedirectResponse
+     * @throws \Exception
+     */
+    public function globalcheckout()
+    {
+        $today_midnight = new \DateTime("today midnight");
+
+        $yesterday_midnight = new \DateTime("yesterday midnight");
+        $all_empty_leaving = $this->checkInRepository->findByPreviousEmptyLeaving($yesterday_midnight->format('Y-m-d'));
+
+        foreach ($all_empty_leaving as $checkin) {
+            $customer = $checkin->getCustomer();
+
+            $halfday_count = $this->checkInRepository->findByHalfDayCountForCustomer($yesterday_midnight->format('Y-m-d'),$customer->getId());
+            $promo = $this->promoRepository->findOneBy(['customer' => $customer]);
+            $checkin->setLeaving($today_midnight);
+
+            $duree = $checkin->getArrival()->diff($checkin->getLeaving());
+            $checkin->setDiff(new \DateTime($duree->format('%h:%i:%s')));
+
+            if ($halfday_count >= 2) {
+                /*
+                * Limit the total number of halfdays in the case where a customer forget to checkout 
+                */
+                $checkin->setHalfDay(0);
+                $checkin->setFree(0);
+            } elseif ($duree->format('%h') <= 4 && $duree->format('%i') <= 30) {
+                /*
+                * If the difference (checkout-checkin) <= 4h30 : setHalfDay(1)
+                */
+                $checkin->setHalfDay(1);
+                if ($promo->getCounter() == 1) {
+                    $checkin->setFree(1);
+                    $promo->setCounter($promo->getCounter()-1);
+                } elseif ($promo->getCounter() > 1) {
+                    $checkin->setFree(2);
+                    $promo->setCounter($promo->getCounter()-2);
+                } else {
+                    $checkin->setFree(0);
+                }
+            } else {
+                $checkin->setHalfDay(2);
+                if ($promo->getCounter() == 1) {
+                    $checkin->setFree(1);
+                    $promo->setCounter($promo->getCounter()-1);
+                } elseif ($promo->getCounter() > 1) {
+                    $checkin->setFree(2);
+                    $promo->setCounter($promo->getCounter()-2);
+                } else {
+                    $checkin->setFree(0);
+                }
+            }
+            $this->manager->persist($checkin);
+            $this->manager->persist($promo);
+            $this->manager->flush();
+        }
 
         return $this->redirectToRoute('user_home');
     }
