@@ -10,6 +10,8 @@
     <div class="container">
         <h1 class="text-primary" style="text-align: center">Liste des personnes inscrites</h1>
 
+        <a href="{{ path('admin_home') }}" class="btn btn-primary btn-lg active mb-5" role="button" aria-pressed="true">Retour</a>
+
         <table id="table_id" class="display table-hover">
             <thead>
             <tr class="text-primary" align="center">
@@ -17,6 +19,7 @@
                 <th>Prénom</th>
                 <th>Pseudo</th>
                 <th>Mail</th>
+                <th>Statut</th>
                 <th>Société</th>
                 <th>Role</th>
                 <th>Profil</th>
@@ -32,6 +35,7 @@
                 <td>{{ customer.firstname }}</td>
                 <td>{{ customer.username }}</td>
                 <td>{{ customer.mail }}</td>
+                <td>{% if customer.status is null or customer.status is empty %} - {% else %} {{ customer.status }} {% endif %}</td>
                 <td>{{ customer.society }}</td>
                 <td>{% if customer.role == 'ROLE_USER' %}
                         Utilisateur

@@ -19,6 +19,7 @@
                 <th>Nom</th>
                 <th>Prénom</th>
                 <th>Pseudo</th>
+                <th>Statut</th>
                 <th>Mail</th>
                 <th>Action</th>
             </tr>
@@ -32,6 +33,7 @@
                 <td>{{ subscription.customer.lastname }}</td>
                 <td>{{ subscription.customer.firstname }}</td>
                 <td>{{ subscription.customer.username }}</td>
+                <td>{% if subscription.customer.status is null or subscription.customer.status is empty %} - {% else %} {{ subscription.customer.status }} {% endif %}</td>
                 <td>{{ subscription.customer.mail }}</td>
                 <td>
                     <a href="{{ path('admin_activate', {'id': subscription.customer.id }) }}" class="btn btn-success btn-lg active" role="button" aria-pressed="true">Activer</a>
