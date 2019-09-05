@@ -9,6 +9,7 @@ use App\Form\CustomerSettingsProfileType;
 use App\Repository\CheckInRepository;
 use App\Repository\OptionsRepository;
 use App\Repository\SubscriptionRepository;
+use App\Repository\HalfDayAdjustmentRepository;
 use App\Service\Services;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -33,10 +34,12 @@ class UserController extends AbstractController
 
     public function __construct(
         SubscriptionRepository $subscriptionRepository,
-        CheckInRepository $checkInRepository
+        CheckInRepository $checkInRepository,
+        HalfDayAdjustmentRepository $halfDayAdjustmentRepository
     ) {
         $this->subscriptionRepository = $subscriptionRepository;
         $this->checkInRepository = $checkInRepository;
+        $this->halfDayAdjustmentRepository = $halfDayAdjustmentRepository;
     }
 
     /**
@@ -173,6 +176,8 @@ class UserController extends AbstractController
      */
     public function listing(OptionsRepository $optionsRepository)
     {
+        $customer = $this->getUser();
+
         $month = [
             '01' => 'Janvier',
             '02' => 'Février',
@@ -188,7 +193,7 @@ class UserController extends AbstractController
             '12' => 'Décembre',
         ];
 
-        $days = [
+        $jours = [
             'Mon' => 'Lundi',
             'Tue' => 'Mardi',
             'Wed' => 'Mercredi',
@@ -206,42 +211,113 @@ class UserController extends AbstractController
             'label' => 'Month'
         ])->getContent();
 
-
-        $checkins = $this->checkInRepository->findBy(
-            ['customer' => $this->getUser()],
+        $user_checkins = $this->checkInRepository->findBy(
+            ['customer' => $customer],
             ['id' => 'DESC']
         );
 
-        $tab = [];
-        foreach ($checkins as $key => $checkin) {
-            $price = 0;
-            $arrival = $checkin->getArrival();
-            $year = $arrival->format('Y');
-            $mois = $arrival->format('m');
-            foreach ($this->checkInRepository->findLikeDate($year.'-'.$mois, $this->getUser()->getId()) as $result) {
-                $price += ($result->getHalfDay() - $result->getFree()) * $halfDayPrice;
+        $all_checkins = [];
+        foreach ($user_checkins as $key => $checkin) {
+            ## Customer's attendance card header [Mois Annee - Facture€] ##
+            $prix = 0;
+            $arrivee = $checkin->getArrival();
+            $annee = $arrivee->format('Y');
+            $mois = $arrivee->format('m');
+            foreach ($this->checkInRepository->findLikeDate($annee.'-'.$mois, $customer->getId()) as $result) {
+                $prix += ($result->getHalfDay() - $result->getFree()) * $halfDayPrice;
             }
-            if ($price>$monthPrice) {
-                $price =$monthPrice;
+            if ($prix>$monthPrice) {
+                $prix = $monthPrice;
             }
-            $day = $days[$arrival->format('D')];
-            $leaving = $checkin->getLeaving();
-            $diff = $checkin->getDiff();
-            $halfDay = $checkin->getHalfDay();
-            $free = $checkin->getFree();
-            $date = $arrival->format('Y-m-d');
-            $line = $month[$mois] . ' ' . $year.' - '.$price.'€';
+            $line = $month[$mois] . ' ' . $annee;
 
-            $tab[$line][] = [$date, $free, $arrival, $leaving, $diff, $halfDay, $day];
+            ## Customer's attendance card body [Arrivee (jj-mm-aaaa hh:mm:ss) | Depart (jj-mm-aaaa hh:mm:ss) | Demi-Journées (int)] ##
+            $Arrivee = $checkin->getArrival();
+            $Jour_arrivee_str = $jours[$Arrivee->format('D')];
+            $Jour_arrivee_num = $Arrivee->format('d');
+            $Mois_arrivee_num = $Arrivee->format('m');
+            $Annee_arrivee_num = $Arrivee->format('Y');
+            $Heure_arrivee = $Arrivee->format('H:i:s');
+            
+            $Depart = $checkin->getLeaving();
+            if($Depart != null)
+            {
+                $Jour_depart_str = $jours[$Depart->format('D')];
+                $Jour_depart_num = $Depart->format('d');
+                $Mois_depart_num = $Depart->format('m');
+                $Annee_depart_num = $Depart->format('Y');
+                $Heure_depart = $Depart->format('H:i:s');
+            }
+            else
+            {
+                $Jour_depart_str = null;
+                $Jour_depart_num = null;
+                $Mois_depart_num = null;
+                $Annee_depart_num = null;
+                $Heure_depart = null;
+            }
+
+            $Demijournees = $checkin->getHalfDay();
+            $Demijournees_offertes = $checkin->getFree();
+            
+            $Difference_depart_arrivee = $checkin->getDiff();
+            $all_checkins[$line][] = [
+                'jour_arrivee_str' => $Jour_arrivee_str,
+                'jour_arrivee_num' => $Jour_arrivee_num,
+                'mois_arrivee_num' => $Mois_arrivee_num,
+                'annee_arrivee_num' => $Annee_arrivee_num,
+                'heure_arrivee' => $Heure_arrivee,
+                'jour_depart_str' => $Jour_depart_str,
+                'jour_depart_num' => $Jour_depart_num,
+                'mois_depart_num' => $Mois_depart_num,
+                'annee_depart_num' => $Annee_depart_num,
+                'heure_depart' => $Heure_depart,
+                'demi_journees' => $Demijournees,
+                'demi_journees_free' => $Demijournees_offertes,
+                'diff_depart_arrivee' => $Difference_depart_arrivee
+            ];
         }
 
 
+        $all_days = [];
 
+        foreach($all_checkins as $key => $days)
+        {
+            foreach($days as $day)
+            {
+                if(isset($all_days[$key]))
+                {
+                    $all_days[$key] += $day['demi_journees'] - $day['demi_journees_free'];
+                }
+                else
+                {
+                   $all_days[$key] = $day['demi_journees'] - $day['demi_journees_free']; 
+                }
+            }
+        }
+
+
+        $all_adjustments = [];
+
+        $adjustments = $this->halfDayAdjustmentRepository->findBy(
+            ['customer_id' => $customer->getId()]
+        );
+
+        foreach($adjustments as $adjustment)
+        {
+            $mois_exp = explode('-', $adjustment->getArrivalMonth());
+            $array_key = $month[$mois_exp[1].''] . ' ' . $mois_exp[0];
+            $all_adjustments[$array_key] = $adjustment;
+        }
 
         return $this->render(
             'user/listing.html.twig',
             [
-                'table' => $tab
+                'all_days' => $all_days,
+                'all_checkins' => $all_checkins,
+                'all_adjustments' => $all_adjustments,
+                'halfDayPrice' => $halfDayPrice,
+                'monthPrice' => $monthPrice
             ]
         );
     }
