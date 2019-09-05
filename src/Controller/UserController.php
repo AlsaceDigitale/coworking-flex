@@ -300,7 +300,8 @@ class UserController extends AbstractController
         $all_adjustments = [];
 
         $adjustments = $this->halfDayAdjustmentRepository->findBy(
-            ['customer_id' => $customer->getId()]
+            ['customer_id' => $customer->getId()],
+            ['id' => 'ASC']
         );
 
         foreach($adjustments as $adjustment)
