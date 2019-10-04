@@ -38,7 +38,7 @@
                             {% endif %}
                             <strong>
                                 {{ key }} - 
-                                {% if all_days[key] * halfDayPrice < monthPrice %}
+                                {% if (all_days[key] + counterAdd - counterRemove) * halfDayPrice < monthPrice %}
                                     <td>
                                     {% if counterAdd - counterRemove >= - all_days[key] %}
                                         {{ ( all_days[key] + counterAdd - counterRemove ) * halfDayPrice }} €
