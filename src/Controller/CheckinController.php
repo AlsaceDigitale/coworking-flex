@@ -182,7 +182,7 @@ class CheckinController extends AbstractController
                 */
                 $checkin->setHalfDay(0);
                 $checkin->setFree(0);
-            } elseif ($duree->format('%h') <= 4 && $duree->format('%i') <= 30) {
+            } elseif ($duree->format('%h') < 4 || ($duree->format('%h') == 4 && $duree->format('%i') <= 30)) {
                 /*
                 * If the difference (checkout-checkin) <= 4h30 : setHalfDay(1)
                 */
