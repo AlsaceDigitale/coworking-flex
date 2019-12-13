@@ -107,7 +107,7 @@ class CheckinController extends AbstractController
                 */
                 $checkin->setHalfDay(0);
                 $checkin->setFree(0);
-            } elseif ($time_hours <= 4 && $time_min <= 30 && $timeDay == 0) {
+            } elseif ($timeDay == 0 && ($time_hours < 4 || ($time_hours == 4 && $time_min <= 30))) {
                 /*
                 * If the difference (checkout-checkin) <= 4h30 : setHalfDay(1)
                 */
