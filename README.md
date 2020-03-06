@@ -18,7 +18,7 @@ docker-compose up
 3. Install dependencies
 
 ```
-docker-compose web php composer.phar install
+docker-compose run web php composer.phar install
 ```
 
 4. Load schema
