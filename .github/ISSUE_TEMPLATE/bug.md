@@ -20,6 +20,10 @@ Etapes pour reproduire le problème
 **Comportement attendu**
 Une description claire et concise de ce que vous attendriez comme résultat
 
+**Idées de solution (facultatif)**
+Avez-vous une idée de l'origine du problème ?
+Une piste de résolution ?
+
 **Screenshots**
 Si possible, des captures d'écran ou fichiers qui expliqueraient votre problème.
 Masquez les informations personnelles ou confidentielles.
