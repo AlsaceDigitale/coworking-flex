@@ -103,7 +103,7 @@ class SecurityController extends AbstractController
             }
         }
         //!!!!!!!!!!!!!!!!!!!!   récupérer le texte d'acceuil   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        $option = $this->options->findOneBy(
+        $options = $this->options->findBy(
             [
                 'label' => 'Text'
             ]
@@ -124,7 +124,7 @@ class SecurityController extends AbstractController
                 'last_username' => $this->utils->getLastUsername(),
                 'error' => $this->utils->getLastAuthenticationError(),
                 'place' => $services->countPlaces(),
-                'text' => $option
+                'texts' => $options
             ]
         );
     }

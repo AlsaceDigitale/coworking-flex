@@ -31,36 +31,51 @@
     {% if not app.user %}
 
         <div class="container mt-5">
-            <div class="row justify-content-center">
+            <div class="column">
+                <div class="row justify-content-center">
 
-                {% if not text.active %}
-                    <div class="col-10 col-md-4">
-                        <div class="p-3">
-                            <button data-toggle="modal" data-target="#modal_login" class="d-block btn btn-block btn-primary">Se connecter</button>
+                    {% if texts | length > 0 and not texts[0].active or texts | length is same as(0) %}
+                        <div class="col-10 col-md-4">
+                            <div class="p-3">
+                                <button data-toggle="modal" data-target="#modal_login" class="d-block btn btn-block btn-primary">Se connecter</button>
+                            </div>
+                            <div class="p-3">
+                                <button data-toggle="modal" data-target="#modal_registration" class="d-block btn btn-block btn-outline-primary ">S'inscrire</button>
+                            </div>
+                            <div class="p-3">
+                                <button data-toggle="modal" data-target="#modal_forgotPassord" class="d-block btn btn-block btn-sm btn-outline-warning ">Mot de passe oublié ?</button>
+                            </div>
                         </div>
-                        <div class="p-3">
-                            <button data-toggle="modal" data-target="#modal_registration" class="d-block btn btn-block btn-outline-primary ">S'inscrire</button>
+                    {% elseif texts | length > 0 %}
+                        <div class="col-12 col-md-6">
+                            <div class="p-3">
+                                <button data-toggle="modal" data-target="#modal_login" class="d-block btn btn-block btn-primary">Se connecter</button>
+                            </div>
+                            <div class="p-3">
+                                <button data-toggle="modal" data-target="#modal_registration" class="d-block btn btn-block btn-outline-primary ">S'inscrire</button>
+                            </div>
+                            <div class="p-3">
+                                <button data-toggle="modal" data-target="#modal_forgotPassord" class="d-block btn btn-block btn-sm btn-outline-warning ">Mot de passe oublié ?</button>
+                            </div>
                         </div>
-                        <div class="p-3">
-                            <button data-toggle="modal" data-target="#modal_forgotPassord" class="d-block btn btn-block btn-sm btn-outline-warning ">Mot de passe oublié ?</button>
+                        <div class="px-3 col-12 col-md-6 mt-3">
+                            <div class="jumbotron">
+                                {{ texts[0].content | raw }}
+                            </div>
                         </div>
-                    </div>
-                {% else %}
-                    <div class="col-12 col-md-6">
-                        <div class="p-3">
-                            <button data-toggle="modal" data-target="#modal_login" class="d-block btn btn-block btn-primary">Se connecter</button>
-                        </div>
-                        <div class="p-3">
-                            <button data-toggle="modal" data-target="#modal_registration" class="d-block btn btn-block btn-outline-primary ">S'inscrire</button>
-                        </div>
-                        <div class="p-3">
-                            <button data-toggle="modal" data-target="#modal_forgotPassord" class="d-block btn btn-block btn-sm btn-outline-warning ">Mot de passe oublié ?</button>
-                        </div>
-                    </div>
-                    <div class="jumbotron col-12 col-md-6 mt-3">
-                        {{ text.content | raw }}
-                    </div>
-                {% endif %}
+                    {% endif %}
+                </div>
+                <div class="row">
+                    {% for k, text in texts %}
+                        {% if text.active and k > 0 and k < 4 %}
+                            <div class="px-3 col-12 col-md-6 mt-3">
+                                <div class="jumbotron">
+                                    {{ text.content | raw }}
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
             </div>
         </div>
 

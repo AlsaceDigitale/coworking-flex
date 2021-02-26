@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Customer;
 use App\Entity\HalfDayAdjustment;
+use App\Entity\Options;
 use App\Form\HalfDayAdjustmentType;
 use App\Repository\HalfDayAdjustmentRepository;
 use App\Form\CustomerSettingsAccountType;
@@ -254,11 +255,16 @@ class AdminController extends AbstractController
      */
     public function text(Request $request)
     {
-        $text = $this->optionsRepository->findOneBy(
-            [
-                'label' => 'Text'
-            ]
-        );
+        $texts = $this->optionsRepository->findBy(['label' => 'Text']);
+        while (count($texts) < 3) {
+            $newText = new Options();
+            $newText->setLabel('Text')
+                ->setActive(false)
+                ->setContent('Entrez votre texte ici.');
+            $this->om->persist($newText);
+            $this->om->flush();
+            $texts[] = $newText;
+        }
         $place = $this->optionsRepository->findOneBy(
             [
                 'label' => 'Place'
@@ -275,16 +281,21 @@ class AdminController extends AbstractController
             ]
         );
 
-        $formtext = $this->createForm(TextHomeType::class, $text);
+        $formtext = $this->createForm(TextHomeType::class, $texts[0]);
+        $formtext2 = $this->createForm(TextHomeType::class, $texts[1]);
+        $formtext3 = $this->createForm(TextHomeType::class, $texts[2]);
         $formtext->handleRequest($request);
 
         if ($formtext->isSubmitted() && $formtext->isValid()) {
-            $this->om->persist($text);
+            $texts[0]->setContent($texts[0]->getContent() . " ");
+            $texts[1]->setContent($texts[1]->getContent() . " ");
+            $texts[2]->setContent($texts[2]->getContent() . " ");
+            $this->om->persist($texts[1]);
             $this->om->flush();
 
             $this->addFlash(
                 'option',
-                'Texte d\'accueil modifié avec succés'
+                'Texte d\'accueil modifié avec succès'
             );
         }
 
@@ -331,8 +342,12 @@ class AdminController extends AbstractController
         return $this->render(
             'admin/text.html.twig',
             [
-                'text' => $text,
-                'form' => $formtext->createView(),
+                'text1' => $texts[0],
+                'text2' => $texts[1],
+                'text3' => $texts[2],
+                'form1' => $formtext->createView(),
+                'form2' => $formtext2->createView(),
+                'form3' => $formtext3->createView(),
                 'formplace' => $formplace->createView(),
                 'formhalfday' => $formhalfday->createView(),
                 'formmonth' => $formmonth->createView(),
