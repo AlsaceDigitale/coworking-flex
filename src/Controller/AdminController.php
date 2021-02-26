@@ -2,36 +2,25 @@
 
 namespace App\Controller;
 
-use App\Entity\Customer;
 use App\Entity\HalfDayAdjustment;
 use App\Form\HalfDayAdjustmentType;
 use App\Repository\HalfDayAdjustmentRepository;
-use App\Form\CustomerSettingsAccountType;
-use App\Form\CustomerSettingsPasswordType;
-use App\Form\CustomerSettingsProfileType;
 use App\Repository\CheckInRepository;
 use App\Repository\OptionsRepository;
 use App\Repository\SubscriptionRepository;
-use App\Service\Services;
-use Doctrine\Common\Persistence\ObjectManager;
+use DateTime;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
-use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
-use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
-use Symfony\Component\Validator\Constraints\DateTime;
 use App\Form\HalfDayType;
 use App\Form\MonthType;
 use App\Form\PlaceType;
 use App\Form\PromoType;
-use App\Form\CustomerType;
 use App\Form\CustomerSettingStatusType;
 use App\Form\TextHomeType;
 use App\Repository\CustomerRepository;
 use App\Repository\PromoRepository;
-use phpDocumentor\Reflection\Types\Null_;
 
 class AdminController extends AbstractController
 {
@@ -42,7 +31,7 @@ class AdminController extends AbstractController
     private $optionsRepository;
     private $promoRepository;
     private $halfDayAdjustmentRepository;
-    private $om;
+    private $manager;
 
     public function __construct(
         CheckInRepository $checkInRepository,
@@ -51,7 +40,7 @@ class AdminController extends AbstractController
         OptionsRepository $optionsRepository,
         PromoRepository $promoRepository,
         HalfDayAdjustmentRepository $halfDayAdjustmentRepository,
-        ObjectManager $om
+        EntityManagerInterface $manager
     ) {
         $this->checkInRepository=$checkInRepository;
         $this->customerRepository=$customerRepository;
@@ -59,7 +48,7 @@ class AdminController extends AbstractController
         $this->optionsRepository=$optionsRepository;
         $this->promoRepository=$promoRepository;
         $this->halfDayAdjustmentRepository=$halfDayAdjustmentRepository;
-        $this->om=$om;
+        $this->manager=$manager;
     }
 
     /**
@@ -67,6 +56,10 @@ class AdminController extends AbstractController
      */
     public function adminHome()
     {
+        ($this->getUser())->setLastActivityAt(new DateTime());
+        $this->manager->persist($this->getUser());
+        $this->manager->flush();
+
         return $this->render('admin/home.html.twig');
     }
 
@@ -133,9 +126,9 @@ class AdminController extends AbstractController
         } else {
             $customer->setActive(0);
         }
-        $this->om->persist($customer);
-        $this->om->persist($promo);
-        $this->om->flush();
+        $this->manager->persist($customer);
+        $this->manager->persist($promo);
+        $this->manager->flush();
 
         return $this->redirect($_SERVER['HTTP_REFERER']);
     }
@@ -169,16 +162,16 @@ class AdminController extends AbstractController
         $counter->handleRequest($request);
 
         if ($counter->isSubmitted() && $counter->isValid()) {
-            $this->om->persist($promo);
-            $this->om->flush();
+            $this->manager->persist($promo);
+            $this->manager->flush();
         };
 
         $status = $this->createForm(CustomerSettingStatusType::class, $customer);
         $status->handleRequest($request);
 
         if ($status->isSubmitted() && $status->isValid()) {
-            $this->om->persist($customer);
-            $this->om->flush();
+            $this->manager->persist($customer);
+            $this->manager->flush();
         }
 
         return $this->render(
@@ -221,8 +214,8 @@ class AdminController extends AbstractController
                 ]
             );
             $raz = $subscriptions->setActive(0);
-            $this->om->persist($raz);
-            $this->om->flush();
+            $this->manager->persist($raz);
+            $this->manager->flush();
         }
 
         return $this->render('admin/raz.html.twig');
@@ -241,8 +234,8 @@ class AdminController extends AbstractController
         } else {
             $switch = $customer->setRole('ROLE_USER');
         }
-        $this->om->persist($switch);
-        $this->om->flush();
+        $this->manager->persist($switch);
+        $this->manager->flush();
 
         return $this->redirect($_SERVER['HTTP_REFERER']);
     }
@@ -279,8 +272,8 @@ class AdminController extends AbstractController
         $formtext->handleRequest($request);
 
         if ($formtext->isSubmitted() && $formtext->isValid()) {
-            $this->om->persist($text);
-            $this->om->flush();
+            $this->manager->persist($text);
+            $this->manager->flush();
 
             $this->addFlash(
                 'option',
@@ -292,8 +285,8 @@ class AdminController extends AbstractController
         $formplace->handleRequest($request);
 
         if ($formplace->isSubmitted() && $formplace->isValid()) {
-            $this->om->persist($place);
-            $this->om->flush();
+            $this->manager->persist($place);
+            $this->manager->flush();
 
             $this->addFlash(
                 'option',
@@ -305,8 +298,8 @@ class AdminController extends AbstractController
         $formhalfday->handleRequest($request);
 
         if ($formhalfday->isSubmitted() && $formhalfday->isValid()) {
-            $this->om->persist($halfday);
-            $this->om->flush();
+            $this->manager->persist($halfday);
+            $this->manager->flush();
 
             $this->addFlash(
                 'option',
@@ -318,8 +311,8 @@ class AdminController extends AbstractController
         $formmonth->handleRequest($request);
 
         if ($formmonth->isSubmitted() && $formmonth->isValid()) {
-            $this->om->persist($month);
-            $this->om->flush();
+            $this->manager->persist($month);
+            $this->manager->flush();
 
             $this->addFlash(
                 'option',
@@ -356,8 +349,8 @@ class AdminController extends AbstractController
         } else {
             $option->setActive(1);
         }
-        $this->om->persist($option);
-        $this->om->flush();
+        $this->manager->persist($option);
+        $this->manager->flush();
 
         return $this->redirect($_SERVER['HTTP_REFERER']);
     }
@@ -417,10 +410,10 @@ class AdminController extends AbstractController
                 }
             } elseif ($checkin->getHalfDay() == 0) {
                 if (!isset($days[$customer_id])) {
-                    $days[$customer_id] = 0; 
+                    $days[$customer_id] = 0;
                 }
-            };
-            
+            }
+
             $days[$customer_id] -= $checkin->getFree();
             if (isset($free[$customer_id])) {
                 $free[$customer_id] += $checkin->getFree();
@@ -468,7 +461,7 @@ class AdminController extends AbstractController
             'label' => 'Month'
         ])->getContent();
 
-        // For the detailed display of the customer's checkins in the facturation table  
+        // For the detailed display of the customer's checkins in the facturation table
         $all_checkins = [];
         foreach ($customers as $key => $customer) {
             $user_checkins = $this->checkInRepository->findBy(
@@ -498,7 +491,7 @@ class AdminController extends AbstractController
                 $Mois_arrivee_num = $Arrivee->format('m');
                 $Annee_arrivee_num = $Arrivee->format('Y');
                 $Heure_arrivee = $Arrivee->format('H:i:s');
-                
+
                 $Depart = $checkin->getLeaving();
                 if($Depart != null)
                 {
@@ -519,7 +512,7 @@ class AdminController extends AbstractController
 
                 $Demijournees = $checkin->getHalfDay();
                 $Demijournees_offertes = $checkin->getFree();
-                
+
                 $Difference_depart_arrivee = $checkin->getDiff();
                 $tab[$line][] = [
                     'jour_arrivee_str' => $Jour_arrivee_str,
@@ -564,8 +557,8 @@ class AdminController extends AbstractController
         $formHalfDayAdjustment->handleRequest($request);
 
         if ($formHalfDayAdjustment->isSubmitted() && $formHalfDayAdjustment->isValid()) {
-            $this->om->persist($ajustement);
-            $this->om->flush();
+            $this->manager->persist($ajustement);
+            $this->manager->flush();
         }
 
         $all_adjustments = [];
@@ -576,7 +569,7 @@ class AdminController extends AbstractController
                 ['id' => 'DESC']
             );
         };
-        
+
         return $this->render(
             'admin/facturation.html.twig',
             [
