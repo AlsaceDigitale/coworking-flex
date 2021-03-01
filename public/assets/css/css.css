@@ -110,7 +110,7 @@ h1, h2, h3, h4, h5 {
 .toggle-tarif-mensuel:hover {
     background: rgb(140,140,140);
     /* background: rgb(124, 222, 132); */
-    color: rgba(240,240,240);
+    color: rgb(240,240,240);
 }
 
 .monthly-price {
@@ -120,8 +120,13 @@ h1, h2, h3, h4, h5 {
     cursor:pointer;
 }
 
+.jumbotron {
+    padding: 20px;
+}
+
 .home-image {
-    width: 25%;
+    border: 2px solid #0d6efd;
+    width: 40%;
     height: auto;
     object-fit: cover;
     margin-right: 1em;
