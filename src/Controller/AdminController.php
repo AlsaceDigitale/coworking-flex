@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Customer;
 use App\Entity\HalfDayAdjustment;
+use App\Entity\HomeTexts;
 use App\Entity\Options;
 use App\Form\HalfDayAdjustmentType;
 use App\Repository\HalfDayAdjustmentRepository;
@@ -281,18 +282,23 @@ class AdminController extends AbstractController
             ]
         );
 
-        $formtext = $this->createForm(TextHomeType::class, $texts[0]);
-        $formtext2 = $this->createForm(TextHomeType::class, $texts[1]);
-        $formtext3 = $this->createForm(TextHomeType::class, $texts[2]);
-        $formtext->handleRequest($request);
+        $homeTexts = new HomeTexts($texts[0], $texts[1], $texts[2]);
+        $formText = $this->createForm(TextHomeType::class, $homeTexts);
+        $formText->handleRequest($request);
+        if ($formText->isSubmitted() && $formText->isValid()) {
+            foreach ($homeTexts->getData() as $k => $data) {
+                if ($data['file']) {
+                    $texts[$k]->setPictureFile($data['file']);
+                }
 
-        if ($formtext->isSubmitted() && $formtext->isValid()) {
-            $texts[0]->setContent($texts[0]->getContent() . " ");
-            $texts[1]->setContent($texts[1]->getContent() . " ");
-            $texts[2]->setContent($texts[2]->getContent() . " ");
-            $this->om->persist($texts[1]);
+                if ($texts[$k]->getContent() === $data['text']) {
+                    $texts[$k]->setContent($data['text'] . "&nbsp");
+                } else {
+                    $texts[$k]->setContent($data['text']);
+                }
+            }
+
             $this->om->flush();
-
             $this->addFlash(
                 'option',
                 'Texte d\'accueil modifié avec succès'
@@ -345,9 +351,7 @@ class AdminController extends AbstractController
                 'text1' => $texts[0],
                 'text2' => $texts[1],
                 'text3' => $texts[2],
-                'form1' => $formtext->createView(),
-                'form2' => $formtext2->createView(),
-                'form3' => $formtext3->createView(),
+                'form' => $formText->createView(),
                 'formplace' => $formplace->createView(),
                 'formhalfday' => $formhalfday->createView(),
                 'formmonth' => $formmonth->createView(),

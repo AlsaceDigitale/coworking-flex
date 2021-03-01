@@ -2,6 +2,22 @@
 
 {% block title %}Connexion Espace Flex{% endblock %}
 
+{% block stylesheets %}
+    <style>
+        .jumbotron {
+            padding: 20px;
+        }
+
+        .home-image {
+            border: 2px solid #0d6efd;
+            width: 40%;
+            height: auto;
+            object-fit: cover;
+            margin-right: 1em;
+        }
+    </style>
+{% endblock %}
+
 {% block body %}
 
     {% if error %}
@@ -34,19 +50,7 @@
             <div class="column">
                 <div class="row justify-content-center">
 
-                    {% if texts | length > 0 and not texts[0].active or texts | length is same as(0) %}
-                        <div class="col-10 col-md-4">
-                            <div class="p-3">
-                                <button data-toggle="modal" data-target="#modal_login" class="d-block btn btn-block btn-primary">Se connecter</button>
-                            </div>
-                            <div class="p-3">
-                                <button data-toggle="modal" data-target="#modal_registration" class="d-block btn btn-block btn-outline-primary ">S'inscrire</button>
-                            </div>
-                            <div class="p-3">
-                                <button data-toggle="modal" data-target="#modal_forgotPassord" class="d-block btn btn-block btn-sm btn-outline-warning ">Mot de passe oublié ?</button>
-                            </div>
-                        </div>
-                    {% elseif texts | length > 0 %}
+                    {% if texts | length > 0 %}
                         <div class="col-12 col-md-6">
                             <div class="p-3">
                                 <button data-toggle="modal" data-target="#modal_login" class="d-block btn btn-block btn-primary">Se connecter</button>
@@ -59,18 +63,20 @@
                             </div>
                         </div>
                         <div class="px-3 col-12 col-md-6 mt-3">
-                            <div class="jumbotron">
-                                {{ texts[0].content | raw }}
+                            <div class="jumbotron d-flex flex-row">
+                                <img src="{{ vich_uploader_asset(texts[0], 'pictureFile') }}" alt="" class="home-image">
+                                <div>{{ texts[0].content | raw }}</div>
                             </div>
                         </div>
                     {% endif %}
                 </div>
                 <div class="row">
                     {% for k, text in texts %}
-                        {% if text.active and k > 0 and k < 4 %}
+                        {% if k > 0 and k < 4 %}
                             <div class="px-3 col-12 col-md-6 mt-3">
-                                <div class="jumbotron">
-                                    {{ text.content | raw }}
+                                <div class="jumbotron d-flex flex-row">
+                                    <img src="{{ vich_uploader_asset(text, 'pictureFile') }}" alt="" class="home-image">
+                                    <div>{{ text.content | raw }}</div>
                                 </div>
                             </div>
                         {% endif %}

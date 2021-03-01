@@ -49,19 +49,43 @@
         <h1 class="text-primary">Modification des textes d'accueil</h1>
 
         <div class="jumbotron first" style="padding-bottom: 15px; padding-top: 40px">
-            {{ form_start(form1) }}
+            {{ form_start(form) }}
+            <h4 class="mt-4">Premier text</h4>
             <div class="text-primary" style="font-size: 20px">
-                {{ form_row(form1.content, {'label': false, 'id': 'text_home_content1'}) }}
+                {{ form_row(form.firstText, {'label': false, 'id': 'text_home_content1'}) }}
             </div>
             <div class="text-primary">
-                {{ form_row(form1.pictureFile, {'label': false}) }}
+                {{ form_row(form.firstPictureFile) }}
+            </div>
+            <div class="text-primary">
+                {{ form_row(form.firstActive) }}
+            </div>
+            <h4 class="mt-4">Deuxième text</h4>
+            <div class="text-primary" style="font-size: 20px">
+                {{ form_row(form.secondText, {'label': false, 'id': 'text_home_content2'}) }}
+            </div>
+            <div class="text-primary">
+                {{ form_row(form.secondPictureFile) }}
+            </div>
+            <div class="text-primary">
+                {{ form_row(form.secondActive) }}
+            </div>
+            <h4 class="mt-4">Troisième text</h4>
+            <div class="text-primary" style="font-size: 20px">
+                {{ form_row(form.thirdText, {'label': false, 'id': 'text_home_content3'}) }}
+            </div>
+            <div class="text-primary">
+                {{ form_row(form.thirdPictureFile) }}
+            </div>
+            <div class="text-primary">
+                {{ form_row(form.thirdActive) }}
             </div>
             <div class="row justify-content-around">
                 <div class="col-3">
                     <a href="{{ path('admin_home') }}" class="btn btn-primary btn-lg btn-block" role="button" aria-pressed="true">Retour</a>
                 </div>
                 <div class="col-3">
-                    <button type="submit" class="btn btn-success btn-lg btn-block">Sauvegarder le texte</button>
+                    <button type="submit" class="btn btn-success btn-lg btn-block">Sauvegarder les textes</button>
                 </div>
                 <div class="col-3">
                     {% if text1.active %}
@@ -71,59 +95,7 @@
                     {% endif %}
                 </div>
             </div>
-            {{ form_end(form1) }}
-        </div>
-
-        <div class="jumbotron first" style="padding-bottom: 15px; padding-top: 40px">
-            {{ form_start(form2) }}
-            <div class="text-primary" style="font-size: 20px">
-                {{ form_row(form2.content, {'label': false, 'id': 'text_home_content2'}) }}
-            </div>
-            <div class="text-primary">
-                {{ form_row(form2.pictureFile, {'label': false}) }}
-            </div>
-            <div class="row justify-content-around">
-                <div class="col-3">
-                    <a href="{{ path('admin_home') }}" class="btn btn-primary btn-lg btn-block" role="button" aria-pressed="true">Retour</a>
-                </div>
-                <div class="col-3">
-                    <button type="submit" class="btn btn-success btn-lg btn-block">Sauvegarder le texte</button>
-                </div>
-                <div class="col-3">
-                    {% if text2.active %}
-                        <a href="{{ path('admin_textactive') }}" class="btn btn-outline-warning btn-lg btn-block" role="button" aria-pressed="true">Désactiver le texte</a>
-                    {% else %}
-                        <a href="{{ path('admin_textactive') }}" class="btn btn-warning btn-lg btn-block" role="button" aria-pressed="true">Activer le texte</a>
-                    {% endif %}
-                </div>
-            </div>
-            {{ form_end(form2) }}
-        </div>
-
-        <div class="jumbotron first" style="padding-bottom: 15px; padding-top: 40px">
-            {{ form_start(form3) }}
-            <div class="text-primary" style="font-size: 20px">
-                {{ form_row(form3.content, {'label': false, 'id': 'text_home_content3'}) }}
-            </div>
-            <div class="text-primary">
-                {{ form_row(form3.pictureFile, {'label': false}) }}
-            </div>
-            <div class="row justify-content-around">
-                <div class="col-3">
-                    <a href="{{ path('admin_home') }}" class="btn btn-primary btn-lg btn-block" role="button" aria-pressed="true">Retour</a>
-                </div>
-                <div class="col-3">
-                    <button type="submit" class="btn btn-success btn-lg btn-block">Sauvegarder le texte</button>
-                </div>
-                <div class="col-3">
-                    {% if text3.active %}
-                        <a href="{{ path('admin_textactive') }}" class="btn btn-outline-warning btn-lg btn-block" role="button" aria-pressed="true">Désactiver le texte</a>
-                    {% else %}
-                        <a href="{{ path('admin_textactive') }}" class="btn btn-warning btn-lg btn-block" role="button" aria-pressed="true">Activer le texte</a>
-                    {% endif %}
-                </div>
-            </div>
-            {{ form_end(form3) }}
+            {{ form_end(form) }}
         </div>
 
     </div>

@@ -105,7 +105,8 @@ class SecurityController extends AbstractController
         //!!!!!!!!!!!!!!!!!!!!   récupérer le texte d'acceuil   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         $options = $this->options->findBy(
             [
-                'label' => 'Text'
+                'label' => 'Text',
+                'active' => true
             ]
         );
 
