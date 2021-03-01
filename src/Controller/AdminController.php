@@ -360,28 +360,6 @@ class AdminController extends AbstractController
     }
 
     /**
-     * @return \Symfony\Component\HttpFoundation\RedirectResponse
-     * @Route("/admin/textactive", name="admin_textactive")
-     */
-    public function textActive()
-    {
-        $option = $this->optionsRepository->findOneBy(
-            [
-                'label' => 'Text'
-            ]
-        );
-        if ($option->getActive()) {
-            $option->setActive(0);
-        } else {
-            $option->setActive(1);
-        }
-        $this->om->persist($option);
-        $this->om->flush();
-
-        return $this->redirect($_SERVER['HTTP_REFERER']);
-    }
-
-    /**
      * @Route("/admin/price", name="admin_price")
      * @param OptionsRepository $optionsRepository
      * @param Request $request
