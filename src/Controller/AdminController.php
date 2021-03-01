@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Entity\Customer;
 use App\Entity\HalfDayAdjustment;
 use App\Form\EditCustomerType;
 use App\Form\HalfDayAdjustmentType;
@@ -11,14 +12,17 @@ use App\Repository\OptionsRepository;
 use App\Repository\SubscriptionRepository;
 use DateTime;
 use Doctrine\ORM\EntityManagerInterface;
+use Swift_Mailer;
+use Swift_Message;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use App\Form\HalfDayType;
 use App\Form\MonthType;
 use App\Form\PlaceType;
 use App\Form\PromoType;
-use App\Form\CustomerSettingStatusType;
 use App\Form\TextHomeType;
 use App\Repository\CustomerRepository;
 use App\Repository\PromoRepository;
@@ -26,6 +30,7 @@ use App\Repository\PromoRepository;
 class AdminController extends AbstractController
 {
 
+    private $adminMail = "coworking-flex@alsacedigitale.org";
     private $checkInRepository;
     private $customerRepository;
     private $subscriptionRepository;
@@ -105,29 +110,44 @@ class AdminController extends AbstractController
     }
 
     /**
-     * @param $id
-     * @return \Symfony\Component\HttpFoundation\RedirectResponse
+     * @param Customer $customer
+     * @param Swift_Mailer $mailer
+     * @return RedirectResponse
      * @Route("/admin/activate/{id}", name="admin_activate")
      */
-    public function activate($id)
+    public function activate(Customer $customer, Swift_Mailer $mailer): Response
     {
-        $customer = $this->subscriptionRepository->findOneBy(
+        $subscription = $this->subscriptionRepository->findOneBy(
             [
-                'customer' => $id
+                'customer' => $customer->getId()
             ]
         );
         $promo = $this->promoRepository->findOneBy(
             [
-                'customer' => $id
+                'customer' => $customer->getId()
             ]
         );
-        if ($customer->getActive() == 0) {
-            $customer->setActive(1);
+        if ($subscription->getActive() == 0) {
+            $subscription->setActive(1);
             $promo->setCounter($promo->getCounter() + 0);
+
+            $message = (new Swift_Message('Modification de votre mot de passe'))
+                ->setFrom($this->adminMail)
+                ->setTo($customer->getMail())
+                ->setBody(
+                    $this->renderView(
+                        'admin/mail-activation.html.twig',
+                        [
+                            'name' => $customer->getFirstname(),
+                        ]
+                    ),
+                    'text/html'
+                );
+            $mailer->send($message);
         } else {
-            $customer->setActive(0);
+            $subscription->setActive(0);
         }
-        $this->manager->persist($customer);
+        $this->manager->persist($subscription);
         $this->manager->persist($promo);
         $this->manager->flush();
 
@@ -136,7 +156,7 @@ class AdminController extends AbstractController
 
     /**
      * @param $id
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      * @Route("/admin/profile/{id}", name="admin_profile")
      */
     public function profile($id, Request $request)
@@ -150,7 +170,7 @@ class AdminController extends AbstractController
         if ($counter->isSubmitted() && $counter->isValid()) {
             $this->manager->persist($promo);
             $this->manager->flush();
-        };
+        }
 
         $customerForm = $this->createForm(EditCustomerType::class, $customer);
         $customerForm->handleRequest($request);
@@ -208,7 +228,7 @@ class AdminController extends AbstractController
 
     /**
      * @param $id
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      * @Route("/admin/switchrole/{id}", name="admin_switchrole")
      */
     public function switch($id)
@@ -227,7 +247,7 @@ class AdminController extends AbstractController
 
     /**
      * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      * @Route("/admin/text", name="admin_text")
      */
     public function text(Request $request)
@@ -319,10 +339,10 @@ class AdminController extends AbstractController
     }
 
     /**
-     * @return \Symfony\Component\HttpFoundation\RedirectResponse
+     * @return RedirectResponse
      * @Route("/admin/textactive", name="admin_textactive")
      */
-    public function textActive()
+    public function textActive(): Response
     {
         $option = $this->optionsRepository->findOneBy(
             [
@@ -553,7 +573,7 @@ class AdminController extends AbstractController
                 ['customer_id' => $customer->getId(), 'arrival_month' => $data],
                 ['id' => 'DESC']
             );
-        };
+        }
 
         return $this->render(
             'admin/facturation.html.twig',
