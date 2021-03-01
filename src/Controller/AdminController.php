@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Customer;
 use App\Entity\HalfDayAdjustment;
 use App\Form\HalfDayAdjustmentType;
+use App\Form\TermsOfUseType;
 use App\Repository\HalfDayAdjustmentRepository;
 use App\Form\CustomerSettingsAccountType;
 use App\Form\CustomerSettingsPasswordType;
@@ -274,6 +275,20 @@ class AdminController extends AbstractController
                 'label' => 'Month'
             ]
         );
+        $termsOfUse = $this->optionsRepository->findOneBy(['label' => 'Terms of use']);
+
+        $formTermsOfUse = $this->createForm(TermsOfUseType::class, $termsOfUse);
+        $formTermsOfUse->handleRequest($request);
+
+        if ($formTermsOfUse->isSubmitted() && $formTermsOfUse->isValid()) {
+            $this->om->persist($termsOfUse);
+            $this->om->flush();
+
+            $this->addFlash(
+                'option',
+                'Conditions d\'utilisation modifiées avec succés'
+            );
+        }
 
         $formtext = $this->createForm(TextHomeType::class, $text);
         $formtext->handleRequest($request);
@@ -336,6 +351,7 @@ class AdminController extends AbstractController
                 'formplace' => $formplace->createView(),
                 'formhalfday' => $formhalfday->createView(),
                 'formmonth' => $formmonth->createView(),
+                'formTermsOfUse' => $formTermsOfUse->createView()
             ]
         );
     }

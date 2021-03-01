@@ -19,6 +19,7 @@ use Symfony\Component\Routing\Annotation\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
+use Symfony\Component\Validator\Constraints\Date;
 use Symfony\Component\Validator\Constraints\DateTime;
 
 /**
@@ -31,25 +32,41 @@ class UserController extends AbstractController
 {
     private $subscriptionRepository;
     private $checkInRepository;
+    private $halfDayAdjustmentRepository;
+    private $optionsRepository;
 
     public function __construct(
         SubscriptionRepository $subscriptionRepository,
         CheckInRepository $checkInRepository,
-        HalfDayAdjustmentRepository $halfDayAdjustmentRepository
+        HalfDayAdjustmentRepository $halfDayAdjustmentRepository,
+        OptionsRepository $optionsRepository
     ) {
         $this->subscriptionRepository = $subscriptionRepository;
         $this->checkInRepository = $checkInRepository;
         $this->halfDayAdjustmentRepository = $halfDayAdjustmentRepository;
+        $this->optionsRepository = $optionsRepository;
     }
 
     /**
      * @Route("/", name="user_home")
      * @Security("is_fully_authenticated()")
+     * @param Services $services
+     * @return Response
      */
-    public function home(Services $services)
+    public function home(Services $services): Response
     {
+        $hasAlreadyCheckedIn = false;
+
         $subscription = $this->subscriptionRepository->findOneBy(['customer' => $this->getUser()]);
         $checkin = $this->checkInRepository->findOneBy(['customer' => $this->getUser(), 'leaving' => null]);
+        $termsOfUseText = $this->optionsRepository->findOneBy(['label' => 'Terms of use']);
+        $todayCheckedIn = $this->checkInRepository->findBy([
+            'customer' => $this->getUser(),
+            'arrivalDate' => (new \DateTime())->format('Y-m-d')
+        ]);
+        if ($todayCheckedIn && count($todayCheckedIn)) {
+            $hasAlreadyCheckedIn = true;
+        }
 
         if ($checkin) {
             $arrival = $checkin->getArrival();
@@ -59,6 +76,7 @@ class UserController extends AbstractController
             return $this->render(
                 'user/home.html.twig',
                 [
+                    'hasAlreadyCheckedIn' => $hasAlreadyCheckedIn,
                     'subscription' => $subscription,
                     'checkin' => $checkin,
                     'place' => $services->countPlaces(),
@@ -70,6 +88,8 @@ class UserController extends AbstractController
         return $this->render(
             'user/home.html.twig',
             [
+                'termsOfUseText' => $termsOfUseText,
+                'hasAlreadyCheckedIn' => $hasAlreadyCheckedIn,
                 'subscription' => $subscription,
                 'checkin' => $checkin,
                 'place' => $services->countPlaces()

@@ -51,9 +51,12 @@
                 <strong id="demo" class="text-primary col-12 mb-3" align="center"></strong>
                 <div class="col-sm-3">
                     <div>
-                        <button onclick="window.location.href='{{ path('user_checkin') }}'"
-                        class="btn btn-block {% if checkin or place <=0 %}btn-secondary disabled{% else %}btn-primary{% endif %} mb-3
-                        " {% if checkin  or place <=0 %}disabled{% endif %}>J'arrive</button>
+                        <button {% if hasAlreadyCheckedIn %}onclick="window.location.href='{{ path('user_checkin') }}'"{% endif %}
+                                class="btn btn-block mb-3 {% if checkin or place <=0 %}btn-secondary disabled{% else %}btn-primary{% endif %}"
+                                {% if checkin  or place <=0 %}disabled{% endif %}
+                                {% if not hasAlreadyCheckedIn %}data-target="#modalTermsOfUse"{% endif %} data-toggle="modal">
+                            J'arrive
+                        </button>
                     </div>
                     <div>
                         <button onclick="window.location.href='{{ path('user_checkout') }}'"
@@ -84,6 +87,36 @@
     <div class="container mt-5">
         <div class="text-center">
             <p>Il reste <strong>{{ place }}</strong> place(s) dans l'espace Flex, ce nombre de places est susceptible de changer très rapidement.</p>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalTermsOfUse">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content d-flex flex-column">
+                <div class="modal-header">
+                    <h5 class="modal-title text-primary">Accepter les conditions d'utilisation</h5>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Fermer">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="container">
+                    <div class="modal-body registration">
+                        {% if termsOfUseText is defined %}
+                            {{ termsOfUseText.content | raw }}
+                        {% endif %}
+                    </div>
+                    <div class="d-flex justify-content-around mb-3">
+                        <button type="button" data-dismiss="modal" aria-label="Fermer" class="btn btn-danger">
+                            <span aria-hidden="true">Je refuse</span>
+                        </button>
+                        <button aria-label="Accepter"
+                                onclick="window.location.href='{{ path('user_checkin') }}'"
+                                class="btn btn-primary">
+                            <span aria-hidden="true">J'accepte les conditions d'utilisation</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 {% endblock %}
