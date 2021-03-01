@@ -10,36 +10,25 @@
         <div class="row">
             <div class="col-8">
                 <div class="jumbotron first">
-                    <div class="row">
-                        <div class="col-6">
-                            <h3 class="text-primary">Nom : </h3>
-                            <p class="mb-3 h5">{{ customer.lastname }}</p>
-                            <h3 class="text-primary">Prénom : </h3>
-                            <p class="mb-3 h5">{{ customer.firstname }}</p>
-                            <h3 class="text-primary">Téléphone : </h3>
-                            <p class="mb-3 h5">{{ customer.phone }}</p>
-                            <h3 class="text-primary">E-mail : </h3>
-                            <p class="mb-3 h5">{{ customer.mail }}</p>
-                            {% if customer.society != '' %}
-                                <h3 class="text-primary">Société : </h3>
-                                <p class="mb-3 h5">{{ customer.society }}</p>
-                            {% endif %}
+                    {{ form_start(customerForm) }}
+                        <div class="row">
+                            <div class="col-6">
+                                {{ form_row(customerForm.lastname) }}
+                                {{ form_row(customerForm.firstname) }}
+                                {{ form_row(customerForm.phone) }}
+                                {{ form_row(customerForm.mail) }}
+                                {{ form_row(customerForm.society) }}
+                            </div>
+                            <div class="col-6">
+                                {{ form_row(customerForm.country) }}
+                                {{ form_row(customerForm.address) }}
+                                {{ form_row(customerForm.zip) }}
+                                {{ form_row(customerForm.city) }}
+                                {{ form_row(customerForm.status) }}
+                            </div>
                         </div>
-                        <div class="col-6">
-                            <h3 class="text-primary">Pays : </h3>
-                            <p class="mb-3 h5">{{ customer.country }}</p>
-                            <h3 class="text-primary">Adresse : </h3>
-                            <p class="mb-3 h5">{{ customer.address }}</p>
-                            <h3 class="text-primary">Code postal : </h3>
-                            <p class="mb-3 h5">{{ customer.zip }}</p>
-                            <h3 class="text-primary">Ville : </h3>
-                            <p class="mb-3 h5">{{ customer.city }}</p>
-                            <h3 class="text-primary">Statut : </h3>
-                            <p class="mb-3 h5">
-                            {{ customer.getStatus }}
-                            </p>
-                        </div>
-                    </div>
+                        <button type="submit" class="btn btn-success btn-lg col-4 offset-4 mt-4">Modifier</button>
+                    {{ form_end(customerForm) }}
                 </div>
             </div>
             <div class="col-4">
@@ -49,14 +38,6 @@
                     {{ form_row(formPromo.counter, {'label':false, 'attr': {'class': 'col-4 offset-4'}}) }}
                     <button type="submit" class="btn btn-success btn-lg col-4 offset-4">Changer</button>
                     {{ form_end(formPromo) }}
-                </div>
-                <br/>
-                <div class="jumbotron first">
-                    {{ form_start(formStatus) }}
-                    <h3 class="text-primary text-center mb-3">Statut :</h3>
-                    {{ form_row(formStatus.status, {'label':false, 'attr': {'class': 'col-4 offset-4'}}) }}
-                    <button type="submit" class="btn btn-success btn-lg col-4 offset-4">Changer</button>
-                    {{ form_end(formStatus) }}
                 </div>
             </div>
 

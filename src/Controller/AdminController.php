@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\HalfDayAdjustment;
+use App\Form\EditCustomerType;
 use App\Form\HalfDayAdjustmentType;
 use App\Repository\HalfDayAdjustmentRepository;
 use App\Repository\CheckInRepository;
@@ -140,36 +141,20 @@ class AdminController extends AbstractController
      */
     public function profile($id, Request $request)
     {
-        $customer = $this->customerRepository->findOneBy(
-            [
-                'id' => $id
-            ]
-        );
-
-        $subscription = $this->subscriptionRepository->findOneBy(
-            [
-                'customer' => $id
-            ]
-        );
-
-        $promo = $this->promoRepository->findOneBy(
-            [
-                'customer' => $id
-            ]
-        );
+        $customer = $this->customerRepository->findOneBy(['id' => $id]);
+        $subscription = $this->subscriptionRepository->findOneBy(['customer' => $id]);
+        $promo = $this->promoRepository->findOneBy(['customer' => $id]);
 
         $counter = $this->createForm(PromoType::class, $promo);
         $counter->handleRequest($request);
-
         if ($counter->isSubmitted() && $counter->isValid()) {
             $this->manager->persist($promo);
             $this->manager->flush();
         };
 
-        $status = $this->createForm(CustomerSettingStatusType::class, $customer);
-        $status->handleRequest($request);
-
-        if ($status->isSubmitted() && $status->isValid()) {
+        $customerForm = $this->createForm(EditCustomerType::class, $customer);
+        $customerForm->handleRequest($request);
+        if ($counter->isSubmitted() && $counter->isValid()) {
             $this->manager->persist($customer);
             $this->manager->flush();
         }
@@ -178,9 +163,9 @@ class AdminController extends AbstractController
             'admin/profile.html.twig',
             [
                 'customer' => $customer,
+                'customerForm' => $customerForm->createView(),
                 'subscription' => $subscription,
                 'formPromo' => $counter->createView(),
-                'formStatus' => $status->createView()
             ]
         );
     }
