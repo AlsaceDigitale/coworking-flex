@@ -292,6 +292,10 @@ class AdminController extends AbstractController
                 }
 
                 if ($texts[$k]->getContent() === $data['text']) {
+                    // https://github.com/dustin10/VichUploaderBundle/issues/8 >
+                    // Un fichier ne peut-être persistée si aucun autre champ n'a été modifié dans l'entité.
+                    // On modifie ici le texte en ajoutant un espace insécable (si le texte est inchangé),
+                    // permettant de forcer la persistance du fichier
                     $texts[$k]->setContent($data['text'] . "&nbsp");
                 } else {
                     $texts[$k]->setContent($data['text']);
