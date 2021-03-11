@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Customer;
 use App\Entity\HalfDayAdjustment;
 use App\Form\HalfDayAdjustmentType;
+use App\Form\TextRGPDType;
 use App\Repository\HalfDayAdjustmentRepository;
 use App\Form\CustomerSettingsAccountType;
 use App\Form\CustomerSettingsPasswordType;
@@ -259,6 +260,7 @@ class AdminController extends AbstractController
                 'label' => 'Text'
             ]
         );
+        $rgpd = $this->optionsRepository->findOneBy(['label' => 'rgpd']);
         $place = $this->optionsRepository->findOneBy(
             [
                 'label' => 'Place'
@@ -285,6 +287,18 @@ class AdminController extends AbstractController
             $this->addFlash(
                 'option',
                 'Texte d\'accueil modifié avec succés'
+            );
+        }
+
+        $formRgpd = $this->createForm(TextRGPDType::class, $rgpd);
+        $formRgpd->handleRequest($request);
+        if ($formRgpd->isSubmitted() && $formRgpd->isValid()) {
+            $this->om->persist($rgpd);
+            $this->om->flush();
+
+            $this->addFlash(
+                'option',
+                'Texte RGPD modifié avec succés'
             );
         }
 
@@ -332,6 +346,7 @@ class AdminController extends AbstractController
             'admin/text.html.twig',
             [
                 'text' => $text,
+                'formRgpd' => $formRgpd->createView(),
                 'form' => $formtext->createView(),
                 'formplace' => $formplace->createView(),
                 'formhalfday' => $formhalfday->createView(),

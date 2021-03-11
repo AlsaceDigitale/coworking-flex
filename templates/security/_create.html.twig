@@ -27,7 +27,7 @@
     </div>
 </div>
 <div class="row">
-    <div class="col-6">
+    <div class="col-6 form-group-column">
         {{ form_row(form.phone, {'attr' : {'placeholder' : 'Téléphone'}}) }}
     </div>
     <div class="col-6">
@@ -59,3 +59,7 @@
     </div>
 </div>
 {{ form_end(form) }}
+<script>
+    const input = document.querySelector("#customer_phone");
+    intlTelInput(input);
+</script>
