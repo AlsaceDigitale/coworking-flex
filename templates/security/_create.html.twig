@@ -43,6 +43,19 @@
             <label for="check">Cocher la case pour accepter les CGU.</label>
             <label for="">Lire les <a href="../../assets/images/CGU.pdf" target="_blank"><strong class="text-danger">CGU</strong>  </a></label>
         </div>
+        <div>
+            <input id="cu" type="checkbox" required aria-label="Cocher pour accepter les CGU"
+                   data-toggle="modal" data-target="#modal_terms_of_use">
+            <label for="cu">Cocher la case pour accepter les
+                <a href="{{ path('security_terms_of_use') }}" target="_blank"><strong class="text-danger">conditions d'utilisation</strong></a>.
+            </label>
+        </div>
+        <div>
+            <input id="rgpd" type="checkbox" required aria-label="Cocher pour accepter les règles RGPD">
+            <label for="rgpd">Cocher la case pour accepter les
+                <a href="{{ path('security_rgpd') }}" target="_blank"><strong class="text-danger">règles RGPD</strong></a>.
+            </label>
+        </div>
     </div>
     <div class="col-12 col-md-6">
         {{ form_row(form.password, {'attr' : {'placeholder' : 'Mot de passe'}}) }}

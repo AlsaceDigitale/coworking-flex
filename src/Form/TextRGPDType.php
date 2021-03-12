@@ -14,7 +14,6 @@ class TextRGPDType extends AbstractType
     {
         $builder
             ->add('content', CKEditorType::class)
-
         ;
     }
 

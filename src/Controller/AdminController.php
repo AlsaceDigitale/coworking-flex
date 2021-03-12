@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Customer;
 use App\Entity\HalfDayAdjustment;
+use App\Entity\Options;
 use App\Form\HalfDayAdjustmentType;
 use App\Form\TextRGPDType;
 use App\Repository\HalfDayAdjustmentRepository;
@@ -16,6 +17,7 @@ use App\Repository\SubscriptionRepository;
 use App\Service\Services;
 use Doctrine\Common\Persistence\ObjectManager;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -53,14 +55,15 @@ class AdminController extends AbstractController
         PromoRepository $promoRepository,
         HalfDayAdjustmentRepository $halfDayAdjustmentRepository,
         ObjectManager $om
-    ) {
-        $this->checkInRepository=$checkInRepository;
-        $this->customerRepository=$customerRepository;
-        $this->subscriptionRepository=$subscriptionRepository;
-        $this->optionsRepository=$optionsRepository;
-        $this->promoRepository=$promoRepository;
-        $this->halfDayAdjustmentRepository=$halfDayAdjustmentRepository;
-        $this->om=$om;
+    )
+    {
+        $this->checkInRepository = $checkInRepository;
+        $this->customerRepository = $customerRepository;
+        $this->subscriptionRepository = $subscriptionRepository;
+        $this->optionsRepository = $optionsRepository;
+        $this->promoRepository = $promoRepository;
+        $this->halfDayAdjustmentRepository = $halfDayAdjustmentRepository;
+        $this->om = $om;
     }
 
     /**
@@ -113,7 +116,7 @@ class AdminController extends AbstractController
 
     /**
      * @param $id
-     * @return \Symfony\Component\HttpFoundation\RedirectResponse
+     * @return RedirectResponse
      * @Route("/admin/activate/{id}", name="admin_activate")
      */
     public function activate($id)
@@ -143,7 +146,7 @@ class AdminController extends AbstractController
 
     /**
      * @param $id
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      * @Route("/admin/profile/{id}", name="admin_profile")
      */
     public function profile($id, Request $request)
@@ -172,7 +175,7 @@ class AdminController extends AbstractController
         if ($counter->isSubmitted() && $counter->isValid()) {
             $this->om->persist($promo);
             $this->om->flush();
-        };
+        }
 
         $status = $this->createForm(CustomerSettingStatusType::class, $customer);
         $status->handleRequest($request);
@@ -231,7 +234,7 @@ class AdminController extends AbstractController
 
     /**
      * @param $id
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      * @Route("/admin/switchrole/{id}", name="admin_switchrole")
      */
     public function switch($id)
@@ -250,32 +253,25 @@ class AdminController extends AbstractController
 
     /**
      * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      * @Route("/admin/text", name="admin_text")
      */
     public function text(Request $request)
     {
-        $text = $this->optionsRepository->findOneBy(
-            [
-                'label' => 'Text'
-            ]
-        );
+        $text = $this->optionsRepository->findOneBy(['label' => 'Text']);
         $rgpd = $this->optionsRepository->findOneBy(['label' => 'rgpd']);
-        $place = $this->optionsRepository->findOneBy(
-            [
-                'label' => 'Place'
-            ]
-        );
-        $halfday = $this->optionsRepository->findOneBy(
-            [
-                'label' => 'HalfDay'
-            ]
-        );
-        $month = $this->optionsRepository->findOneBy(
-            [
-                'label' => 'Month'
-            ]
-        );
+        $place = $this->optionsRepository->findOneBy(['label' => 'Place']);
+        $halfday = $this->optionsRepository->findOneBy(['label' => 'HalfDay']);
+        $month = $this->optionsRepository->findOneBy(['label' => 'Month']);
+
+        if (!$rgpd) {
+            dump($rgpd);
+            $rgpd = new Options();
+            $rgpd->setLabel('rgpd')
+                ->setContent('Entrez votre texte ici');
+            $this->om->persist($rgpd);
+            $this->om->flush();
+        }
 
         $formtext = $this->createForm(TextHomeType::class, $text);
         $formtext->handleRequest($request);
@@ -286,7 +282,7 @@ class AdminController extends AbstractController
 
             $this->addFlash(
                 'option',
-                'Texte d\'accueil modifié avec succés'
+                'Texte d\'accueil modifié avec succès'
             );
         }
 
@@ -298,7 +294,7 @@ class AdminController extends AbstractController
 
             $this->addFlash(
                 'option',
-                'Texte RGPD modifié avec succés'
+                'Texte RGPD modifié avec succès'
             );
         }
 
@@ -337,10 +333,9 @@ class AdminController extends AbstractController
 
             $this->addFlash(
                 'option',
-                'Prix au mois modifié avec succés'
+                'Prix au mois modifié avec succès'
             );
         }
-
 
         return $this->render(
             'admin/text.html.twig',
@@ -356,10 +351,10 @@ class AdminController extends AbstractController
     }
 
     /**
-     * @return \Symfony\Component\HttpFoundation\RedirectResponse
+     * @return RedirectResponse
      * @Route("/admin/textactive", name="admin_textactive")
      */
-    public function textActive()
+    public function textActive(): RedirectResponse
     {
         $option = $this->optionsRepository->findOneBy(
             [
@@ -381,8 +376,9 @@ class AdminController extends AbstractController
      * @Route("/admin/price", name="admin_price")
      * @param OptionsRepository $optionsRepository
      * @param Request $request
+     * @return Response
      */
-    public function price(OptionsRepository $optionsRepository, Request $request)
+    public function price(OptionsRepository $optionsRepository, Request $request): Response
     {
         $checkins = $this->checkInRepository->findAll();
         $dates = [];
@@ -397,9 +393,7 @@ class AdminController extends AbstractController
         $data = 0;
         if (!empty($_POST)) {
             $data = $_POST['searchMonth'];
-        }
-        elseif(count($dates) > 0)
-        {
+        } elseif (count($dates) > 0) {
             $data = end($dates);
         }
 
@@ -408,7 +402,7 @@ class AdminController extends AbstractController
         ]);
 
         $days = [];
-        $free= [];
+        $free = [];
         $customers = [];
         $count_attendance = [];
         foreach ($checkins as $key => $checkin) {
@@ -432,10 +426,10 @@ class AdminController extends AbstractController
                 }
             } elseif ($checkin->getHalfDay() == 0) {
                 if (!isset($days[$customer_id])) {
-                    $days[$customer_id] = 0; 
+                    $days[$customer_id] = 0;
                 }
-            };
-            
+            }
+
             $days[$customer_id] -= $checkin->getFree();
             if (isset($free[$customer_id])) {
                 $free[$customer_id] += $checkin->getFree();
@@ -498,10 +492,10 @@ class AdminController extends AbstractController
                 $arrivee = $checkin->getArrival();
                 $annee = $arrivee->format('Y');
                 $mois = $arrivee->format('m');
-                foreach ($this->checkInRepository->findLikeDate($annee.'-'.$mois, $customer->getId()) as $result) {
+                foreach ($this->checkInRepository->findLikeDate($annee . '-' . $mois, $customer->getId()) as $result) {
                     $prix += ($result->getHalfDay() - $result->getFree()) * $halfDayPrice;
                 }
-                if ($prix>$monthPrice) {
+                if ($prix > $monthPrice) {
                     $prix = $monthPrice;
                 }
                 $line = $month[$mois] . ' ' . $annee;
@@ -513,18 +507,15 @@ class AdminController extends AbstractController
                 $Mois_arrivee_num = $Arrivee->format('m');
                 $Annee_arrivee_num = $Arrivee->format('Y');
                 $Heure_arrivee = $Arrivee->format('H:i:s');
-                
+
                 $Depart = $checkin->getLeaving();
-                if($Depart != null)
-                {
+                if ($Depart != null) {
                     $Jour_depart_str = $jours[$Depart->format('D')];
                     $Jour_depart_num = $Depart->format('d');
                     $Mois_depart_num = $Depart->format('m');
                     $Annee_depart_num = $Depart->format('Y');
                     $Heure_depart = $Depart->format('H:i:s');
-                }
-                else
-                {
+                } else {
                     $Jour_depart_str = null;
                     $Jour_depart_num = null;
                     $Mois_depart_num = null;
@@ -534,7 +525,7 @@ class AdminController extends AbstractController
 
                 $Demijournees = $checkin->getHalfDay();
                 $Demijournees_offertes = $checkin->getFree();
-                
+
                 $Difference_depart_arrivee = $checkin->getDiff();
                 $tab[$line][] = [
                     'jour_arrivee_str' => $Jour_arrivee_str,
@@ -590,8 +581,8 @@ class AdminController extends AbstractController
                 ['customer_id' => $customer->getId(), 'arrival_month' => $data],
                 ['id' => 'DESC']
             );
-        };
-        
+        }
+
         return $this->render(
             'admin/facturation.html.twig',
             [
