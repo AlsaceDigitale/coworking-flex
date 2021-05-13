@@ -22,14 +22,14 @@ final class Version20210226073340 extends AbstractMigration
         // this up() migration is auto-generated, please modify it to your needs
         $this->abortIf($this->connection->getDatabasePlatform()->getName() !== 'mysql', 'Migration can only be executed safely on \'mysql\'.');
 
-        $this->addSql('ALTER TABLE customer ADD status VARCHAR(255) DEFAULT NULL, ADD created_at DATETIME DEFAULT NULL, ADD last_activity_at DATETIME DEFAULT NULL');
+        $this->addSql('ALTER TABLE customer ADD created_at DATETIME DEFAULT NULL, ADD last_activity_at DATETIME DEFAULT NULL');
     }
 
     public function down(Schema $schema) : void
     {
         // this down() migration is auto-generated, please modify it to your needs
         $this->abortIf($this->connection->getDatabasePlatform()->getName() !== 'mysql', 'Migration can only be executed safely on \'mysql\'.');
-        $this->addSql('ALTER TABLE customer DROP status, DROP created_at, DROP last_activity_at');
+        $this->addSql('ALTER TABLE customer DROP created_at, DROP last_activity_at');
 
     }
 }
