@@ -109,6 +109,26 @@
             {{ form_end(formTermsOfUse) }}
         </div>
 
+        <hr>
+        <h1 class="text-primary">Modification du texte RGPD</h1>
+
+        <div class="jumbotron first" style="padding-bottom: 15px; padding-top: 40px">
+
+            {{ form_start(formRgpd) }}
+            <div class="text-primary" style="font-size: 20px">
+                {{ form_row(formRgpd.content, {'label': false}) }}
+            </div>
+            <div class="row justify-content-around">
+                <div class="col-3">
+                    <a href="{{ path('admin_home') }}" class="btn btn-primary btn-lg btn-block" role="button" aria-pressed="true">Retour</a>
+                </div>
+                <div class="col-3">
+                    <button type="submit" class="btn btn-success btn-lg btn-block">Sauvegarder le texte</button>
+                </div>
+            </div>
+            {{ form_end(formRgpd) }}
+        </div>
+
 
     </div>
 {% endblock %}

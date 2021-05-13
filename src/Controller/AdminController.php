@@ -9,6 +9,7 @@ use App\Entity\HomeTexts;
 use App\Entity\Options;
 use App\Form\HalfDayAdjustmentType;
 use App\Form\TermsOfUseType;
+use App\Form\TextRGPDType;
 use App\Repository\HalfDayAdjustmentRepository;
 use App\Repository\CheckInRepository;
 use App\Repository\OptionsRepository;
@@ -50,13 +51,14 @@ class AdminController extends AbstractController
         PromoRepository $promoRepository,
         HalfDayAdjustmentRepository $halfDayAdjustmentRepository,
         EntityManagerInterface $manager
-    ) {
-        $this->checkInRepository=$checkInRepository;
-        $this->customerRepository=$customerRepository;
-        $this->subscriptionRepository=$subscriptionRepository;
-        $this->optionsRepository=$optionsRepository;
-        $this->promoRepository=$promoRepository;
-        $this->halfDayAdjustmentRepository=$halfDayAdjustmentRepository;
+    )
+    {
+        $this->checkInRepository = $checkInRepository;
+        $this->customerRepository = $customerRepository;
+        $this->subscriptionRepository = $subscriptionRepository;
+        $this->optionsRepository = $optionsRepository;
+        $this->promoRepository = $promoRepository;
+        $this->halfDayAdjustmentRepository = $halfDayAdjustmentRepository;
         $this->manager=$manager;
     }
 
@@ -265,22 +267,21 @@ class AdminController extends AbstractController
             $this->manager->flush();
             $texts[] = $newText;
         }
-        $place = $this->optionsRepository->findOneBy(
-            [
-                'label' => 'Place'
-            ]
-        );
-        $halfday = $this->optionsRepository->findOneBy(
-            [
-                'label' => 'HalfDay'
-            ]
-        );
-        $month = $this->optionsRepository->findOneBy(
-            [
-                'label' => 'Month'
-            ]
-        );
+
+        $rgpd = $this->optionsRepository->findOneBy(['label' => 'rgpd']);
+        $place = $this->optionsRepository->findOneBy(['label' => 'Place']);
+        $halfday = $this->optionsRepository->findOneBy(['label' => 'HalfDay']);
+        $month = $this->optionsRepository->findOneBy(['label' => 'Month']);
         $termsOfUse = $this->optionsRepository->findOneBy(['label' => 'Terms of use']);
+
+        if (!$rgpd) {
+            dump($rgpd);
+            $rgpd = new Options();
+            $rgpd->setLabel('rgpd')
+                ->setContent('Entrez votre texte ici');
+            $this->manager->persist($rgpd);
+            $this->manager->flush();
+        }
 
         $formTermsOfUse = $this->createForm(TermsOfUseType::class, $termsOfUse);
         $formTermsOfUse->handleRequest($request);
@@ -322,6 +323,18 @@ class AdminController extends AbstractController
             );
         }
 
+        $formRgpd = $this->createForm(TextRGPDType::class, $rgpd);
+        $formRgpd->handleRequest($request);
+        if ($formRgpd->isSubmitted() && $formRgpd->isValid()) {
+            $this->manager->persist($rgpd);
+            $this->manager->flush();
+
+            $this->addFlash(
+                'option',
+                'Texte RGPD modifié avec succès'
+            );
+        }
+
         $formplace = $this->createForm(PlaceType::class, $place);
         $formplace->handleRequest($request);
 
@@ -357,10 +370,9 @@ class AdminController extends AbstractController
 
             $this->addFlash(
                 'option',
-                'Prix au mois modifié avec succés'
+                'Prix au mois modifié avec succès'
             );
         }
-
 
         return $this->render(
             'admin/text.html.twig',
@@ -368,6 +380,7 @@ class AdminController extends AbstractController
                 'text1' => $texts[0],
                 'text2' => $texts[1],
                 'text3' => $texts[2],
+                'formRgpd' => $formRgpd->createView(),
                 'form' => $formText->createView(),
                 'formplace' => $formplace->createView(),
                 'formhalfday' => $formhalfday->createView(),
@@ -381,7 +394,7 @@ class AdminController extends AbstractController
      * @return RedirectResponse
      * @Route("/admin/textactive", name="admin_textactive")
      */
-    public function textActive(): Response
+    public function textActive(): RedirectResponse
     {
         $option = $this->optionsRepository->findOneBy(
             [
@@ -403,8 +416,9 @@ class AdminController extends AbstractController
      * @Route("/admin/price", name="admin_price")
      * @param OptionsRepository $optionsRepository
      * @param Request $request
+     * @return Response
      */
-    public function price(OptionsRepository $optionsRepository, Request $request)
+    public function price(OptionsRepository $optionsRepository, Request $request): Response
     {
         $checkins = $this->checkInRepository->findAll();
         $dates = [];
@@ -419,9 +433,7 @@ class AdminController extends AbstractController
         $data = 0;
         if (!empty($_POST)) {
             $data = $_POST['searchMonth'];
-        }
-        elseif(count($dates) > 0)
-        {
+        } elseif (count($dates) > 0) {
             $data = end($dates);
         }
 
@@ -430,7 +442,7 @@ class AdminController extends AbstractController
         ]);
 
         $days = [];
-        $free= [];
+        $free = [];
         $customers = [];
         $count_attendance = [];
         foreach ($checkins as $key => $checkin) {
@@ -520,10 +532,10 @@ class AdminController extends AbstractController
                 $arrivee = $checkin->getArrival();
                 $annee = $arrivee->format('Y');
                 $mois = $arrivee->format('m');
-                foreach ($this->checkInRepository->findLikeDate($annee.'-'.$mois, $customer->getId()) as $result) {
+                foreach ($this->checkInRepository->findLikeDate($annee . '-' . $mois, $customer->getId()) as $result) {
                     $prix += ($result->getHalfDay() - $result->getFree()) * $halfDayPrice;
                 }
-                if ($prix>$monthPrice) {
+                if ($prix > $monthPrice) {
                     $prix = $monthPrice;
                 }
                 $line = $month[$mois] . ' ' . $annee;
@@ -537,16 +549,13 @@ class AdminController extends AbstractController
                 $Heure_arrivee = $Arrivee->format('H:i:s');
 
                 $Depart = $checkin->getLeaving();
-                if($Depart != null)
-                {
+                if ($Depart != null) {
                     $Jour_depart_str = $jours[$Depart->format('D')];
                     $Jour_depart_num = $Depart->format('d');
                     $Mois_depart_num = $Depart->format('m');
                     $Annee_depart_num = $Depart->format('Y');
                     $Heure_depart = $Depart->format('H:i:s');
-                }
-                else
-                {
+                } else {
                     $Jour_depart_str = null;
                     $Jour_depart_num = null;
                     $Mois_depart_num = null;

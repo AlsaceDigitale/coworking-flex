@@ -2,6 +2,10 @@
 
 {% block title %}Connexion Espace Flex{% endblock %}
 
+{% block stylesheets %}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.12/css/intlTelInput.css">
+{% endblock %}
+
 {% block body %}
 
     {% if error %}
@@ -190,6 +194,7 @@
 {% endblock %}
 
 {% block javascripts %}
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.12/js/intlTelInput.min.js"></script>
 
     <!-- !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!   Registration form modal  Ajax !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! -->
 

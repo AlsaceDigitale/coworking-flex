@@ -142,3 +142,8 @@ h1, h2, h3, h4, h5 {
     object-fit: cover;
     margin-right: 1em;
 }
+
+.form-group-column .form-group {
+    display: flex;
+    flex-direction: column;
+}
