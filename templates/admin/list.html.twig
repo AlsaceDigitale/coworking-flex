@@ -22,6 +22,8 @@
                 <th>Statut</th>
                 <th>Société</th>
                 <th>Role</th>
+                <th>Date de création</th>
+                <th>Dernière activité</th>
                 <th>Profil</th>
             </tr>
             </thead>
@@ -29,30 +31,33 @@
 
             {% for customer in customers %}
 
-            <tr align="center">
+                <tr align="center">
 
-                <td>{{ customer.lastname }}</td>
-                <td>{{ customer.firstname }}</td>
-                <td>{{ customer.username }}</td>
-                <td>{{ customer.mail }}</td>
-                <td>{% if customer.status is null or customer.status is empty %} - {% else %} {{ customer.status }} {% endif %}</td>
-                <td>{{ customer.society }}</td>
-                <td>{% if customer.role == 'ROLE_USER' %}
-                        Utilisateur
-                    {% else %}
-                        Administrateur
-                    {% endif %}
-                </td>
-                <td>
-                    <a href="{{ path('admin_profile', {'id': customer.id }) }}" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Voir le profil</a>
-                </td>
+                    <td>{{ customer.lastname }}</td>
+                    <td>{{ customer.firstname }}</td>
+                    <td>{{ customer.username }}</td>
+                    <td>{{ customer.mail }}</td>
+                    <td>{% if customer.status is null or customer.status is empty %} - {% else %} {{ customer.status }} {% endif %}</td>
+                    <td>{{ customer.society }}</td>
+                    <td>{% if customer.role == 'ROLE_USER' %}
+                            Utilisateur
+                        {% else %}
+                            Administrateur
+                        {% endif %}
+                    </td>
+                    <td title="{% if customer.lastActivityAt is null %}-{% else %}{{ customer.createdAt | date('H:i:s') }}{% endif %}">
+                        {% if customer.createdAt is null %}-{% else %}{{ customer.createdAt | date('d-m-Y') }}{% endif %}
+                    </td>
+                    <td title="{% if customer.lastActivityAt is null %}-{% else %}{{ customer.lastActivityAt | date('H:i:s') }}{% endif %}">
+                        {% if customer.lastActivityAt is null %}-{% else %}{{ customer.lastActivityAt | date('d-m-Y') }}{% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ path('admin_profile', {'id': customer.id }) }}" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Voir le profil</a>
+                    </td>
 
-            </tr>
+                </tr>
 
             {% endfor %}
-
-
-
 
             </tbody>
         </table>

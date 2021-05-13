@@ -4,46 +4,41 @@ namespace App\Controller;
 
 use App\Entity\Customer;
 use App\Entity\HalfDayAdjustment;
+use App\Form\EditCustomerType;
 use App\Form\HalfDayAdjustmentType;
 use App\Form\TermsOfUseType;
 use App\Repository\HalfDayAdjustmentRepository;
-use App\Form\CustomerSettingsAccountType;
-use App\Form\CustomerSettingsPasswordType;
-use App\Form\CustomerSettingsProfileType;
 use App\Repository\CheckInRepository;
 use App\Repository\OptionsRepository;
 use App\Repository\SubscriptionRepository;
-use App\Service\Services;
-use Doctrine\Common\Persistence\ObjectManager;
+use DateTime;
+use Doctrine\ORM\EntityManagerInterface;
+use Swift_Mailer;
+use Swift_Message;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
-use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
-use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
-use Symfony\Component\Validator\Constraints\DateTime;
 use App\Form\HalfDayType;
 use App\Form\MonthType;
 use App\Form\PlaceType;
 use App\Form\PromoType;
-use App\Form\CustomerType;
-use App\Form\CustomerSettingStatusType;
 use App\Form\TextHomeType;
 use App\Repository\CustomerRepository;
 use App\Repository\PromoRepository;
-use phpDocumentor\Reflection\Types\Null_;
 
 class AdminController extends AbstractController
 {
 
+    private $adminMail = "coworking-flex@alsacedigitale.org";
     private $checkInRepository;
     private $customerRepository;
     private $subscriptionRepository;
     private $optionsRepository;
     private $promoRepository;
     private $halfDayAdjustmentRepository;
-    private $om;
+    private $manager;
 
     public function __construct(
         CheckInRepository $checkInRepository,
@@ -52,7 +47,7 @@ class AdminController extends AbstractController
         OptionsRepository $optionsRepository,
         PromoRepository $promoRepository,
         HalfDayAdjustmentRepository $halfDayAdjustmentRepository,
-        ObjectManager $om
+        EntityManagerInterface $manager
     ) {
         $this->checkInRepository=$checkInRepository;
         $this->customerRepository=$customerRepository;
@@ -60,7 +55,7 @@ class AdminController extends AbstractController
         $this->optionsRepository=$optionsRepository;
         $this->promoRepository=$promoRepository;
         $this->halfDayAdjustmentRepository=$halfDayAdjustmentRepository;
-        $this->om=$om;
+        $this->manager=$manager;
     }
 
     /**
@@ -68,6 +63,10 @@ class AdminController extends AbstractController
      */
     public function adminHome()
     {
+        ($this->getUser())->setLastActivityAt(new DateTime());
+        $this->manager->persist($this->getUser());
+        $this->manager->flush();
+
         return $this->render('admin/home.html.twig');
     }
 
@@ -112,83 +111,82 @@ class AdminController extends AbstractController
     }
 
     /**
-     * @param $id
-     * @return \Symfony\Component\HttpFoundation\RedirectResponse
+     * @param Customer $customer
+     * @param Swift_Mailer $mailer
+     * @return RedirectResponse
      * @Route("/admin/activate/{id}", name="admin_activate")
      */
-    public function activate($id)
+    public function activate(Customer $customer, Swift_Mailer $mailer): Response
     {
-        $customer = $this->subscriptionRepository->findOneBy(
+        $subscription = $this->subscriptionRepository->findOneBy(
             [
-                'customer' => $id
+                'customer' => $customer->getId()
             ]
         );
         $promo = $this->promoRepository->findOneBy(
             [
-                'customer' => $id
+                'customer' => $customer->getId()
             ]
         );
-        if ($customer->getActive() == 0) {
-            $customer->setActive(1);
+        if ($subscription->getActive() == 0) {
+            $subscription->setActive(1);
             $promo->setCounter($promo->getCounter() + 0);
+
+            $message = (new Swift_Message('Modification de votre mot de passe'))
+                ->setFrom($this->adminMail)
+                ->setTo($customer->getMail())
+                ->setBody(
+                    $this->renderView(
+                        'admin/mail-activation.html.twig',
+                        [
+                            'name' => $customer->getFirstname(),
+                        ]
+                    ),
+                    'text/html'
+                );
+            $mailer->send($message);
         } else {
-            $customer->setActive(0);
+            $subscription->setActive(0);
         }
-        $this->om->persist($customer);
-        $this->om->persist($promo);
-        $this->om->flush();
+        $this->manager->persist($subscription);
+        $this->manager->persist($promo);
+        $this->manager->flush();
 
         return $this->redirect($_SERVER['HTTP_REFERER']);
     }
 
     /**
      * @param $id
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      * @Route("/admin/profile/{id}", name="admin_profile")
      */
     public function profile($id, Request $request)
     {
-        $customer = $this->customerRepository->findOneBy(
-            [
-                'id' => $id
-            ]
-        );
-
-        $subscription = $this->subscriptionRepository->findOneBy(
-            [
-                'customer' => $id
-            ]
-        );
-
-        $promo = $this->promoRepository->findOneBy(
-            [
-                'customer' => $id
-            ]
-        );
+        $customer = $this->customerRepository->findOneBy(['id' => $id]);
+        $subscription = $this->subscriptionRepository->findOneBy(['customer' => $id]);
+        $promo = $this->promoRepository->findOneBy(['customer' => $id]);
 
         $counter = $this->createForm(PromoType::class, $promo);
         $counter->handleRequest($request);
-
         if ($counter->isSubmitted() && $counter->isValid()) {
-            $this->om->persist($promo);
-            $this->om->flush();
-        };
+            $this->manager->persist($promo);
+            $this->manager->flush();
+        }
 
-        $status = $this->createForm(CustomerSettingStatusType::class, $customer);
-        $status->handleRequest($request);
-
-        if ($status->isSubmitted() && $status->isValid()) {
-            $this->om->persist($customer);
-            $this->om->flush();
+        $customerForm = $this->createForm(EditCustomerType::class, $customer);
+        $customerForm->handleRequest($request);
+        if ($counter->isSubmitted() && $counter->isValid()) {
+            $this->manager->persist($customer);
+            $this->manager->flush();
         }
 
         return $this->render(
             'admin/profile.html.twig',
             [
                 'customer' => $customer,
+                'customerForm' => $customerForm->createView(),
                 'subscription' => $subscription,
                 'formPromo' => $counter->createView(),
-                'formStatus' => $status->createView()
             ]
         );
     }
@@ -222,8 +220,8 @@ class AdminController extends AbstractController
                 ]
             );
             $raz = $subscriptions->setActive(0);
-            $this->om->persist($raz);
-            $this->om->flush();
+            $this->manager->persist($raz);
+            $this->manager->flush();
         }
 
         return $this->render('admin/raz.html.twig');
@@ -231,7 +229,7 @@ class AdminController extends AbstractController
 
     /**
      * @param $id
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      * @Route("/admin/switchrole/{id}", name="admin_switchrole")
      */
     public function switch($id)
@@ -242,15 +240,15 @@ class AdminController extends AbstractController
         } else {
             $switch = $customer->setRole('ROLE_USER');
         }
-        $this->om->persist($switch);
-        $this->om->flush();
+        $this->manager->persist($switch);
+        $this->manager->flush();
 
         return $this->redirect($_SERVER['HTTP_REFERER']);
     }
 
     /**
      * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      * @Route("/admin/text", name="admin_text")
      */
     public function text(Request $request)
@@ -294,8 +292,8 @@ class AdminController extends AbstractController
         $formtext->handleRequest($request);
 
         if ($formtext->isSubmitted() && $formtext->isValid()) {
-            $this->om->persist($text);
-            $this->om->flush();
+            $this->manager->persist($text);
+            $this->manager->flush();
 
             $this->addFlash(
                 'option',
@@ -307,8 +305,8 @@ class AdminController extends AbstractController
         $formplace->handleRequest($request);
 
         if ($formplace->isSubmitted() && $formplace->isValid()) {
-            $this->om->persist($place);
-            $this->om->flush();
+            $this->manager->persist($place);
+            $this->manager->flush();
 
             $this->addFlash(
                 'option',
@@ -320,8 +318,8 @@ class AdminController extends AbstractController
         $formhalfday->handleRequest($request);
 
         if ($formhalfday->isSubmitted() && $formhalfday->isValid()) {
-            $this->om->persist($halfday);
-            $this->om->flush();
+            $this->manager->persist($halfday);
+            $this->manager->flush();
 
             $this->addFlash(
                 'option',
@@ -333,8 +331,8 @@ class AdminController extends AbstractController
         $formmonth->handleRequest($request);
 
         if ($formmonth->isSubmitted() && $formmonth->isValid()) {
-            $this->om->persist($month);
-            $this->om->flush();
+            $this->manager->persist($month);
+            $this->manager->flush();
 
             $this->addFlash(
                 'option',
@@ -357,10 +355,10 @@ class AdminController extends AbstractController
     }
 
     /**
-     * @return \Symfony\Component\HttpFoundation\RedirectResponse
+     * @return RedirectResponse
      * @Route("/admin/textactive", name="admin_textactive")
      */
-    public function textActive()
+    public function textActive(): Response
     {
         $option = $this->optionsRepository->findOneBy(
             [
@@ -372,8 +370,8 @@ class AdminController extends AbstractController
         } else {
             $option->setActive(1);
         }
-        $this->om->persist($option);
-        $this->om->flush();
+        $this->manager->persist($option);
+        $this->manager->flush();
 
         return $this->redirect($_SERVER['HTTP_REFERER']);
     }
@@ -433,10 +431,10 @@ class AdminController extends AbstractController
                 }
             } elseif ($checkin->getHalfDay() == 0) {
                 if (!isset($days[$customer_id])) {
-                    $days[$customer_id] = 0; 
+                    $days[$customer_id] = 0;
                 }
-            };
-            
+            }
+
             $days[$customer_id] -= $checkin->getFree();
             if (isset($free[$customer_id])) {
                 $free[$customer_id] += $checkin->getFree();
@@ -484,7 +482,7 @@ class AdminController extends AbstractController
             'label' => 'Month'
         ])->getContent();
 
-        // For the detailed display of the customer's checkins in the facturation table  
+        // For the detailed display of the customer's checkins in the facturation table
         $all_checkins = [];
         foreach ($customers as $key => $customer) {
             $user_checkins = $this->checkInRepository->findBy(
@@ -514,7 +512,7 @@ class AdminController extends AbstractController
                 $Mois_arrivee_num = $Arrivee->format('m');
                 $Annee_arrivee_num = $Arrivee->format('Y');
                 $Heure_arrivee = $Arrivee->format('H:i:s');
-                
+
                 $Depart = $checkin->getLeaving();
                 if($Depart != null)
                 {
@@ -535,7 +533,7 @@ class AdminController extends AbstractController
 
                 $Demijournees = $checkin->getHalfDay();
                 $Demijournees_offertes = $checkin->getFree();
-                
+
                 $Difference_depart_arrivee = $checkin->getDiff();
                 $tab[$line][] = [
                     'jour_arrivee_str' => $Jour_arrivee_str,
@@ -580,8 +578,8 @@ class AdminController extends AbstractController
         $formHalfDayAdjustment->handleRequest($request);
 
         if ($formHalfDayAdjustment->isSubmitted() && $formHalfDayAdjustment->isValid()) {
-            $this->om->persist($ajustement);
-            $this->om->flush();
+            $this->manager->persist($ajustement);
+            $this->manager->flush();
         }
 
         $all_adjustments = [];
@@ -591,8 +589,8 @@ class AdminController extends AbstractController
                 ['customer_id' => $customer->getId(), 'arrival_month' => $data],
                 ['id' => 'DESC']
             );
-        };
-        
+        }
+
         return $this->render(
             'admin/facturation.html.twig',
             [

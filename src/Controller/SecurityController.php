@@ -12,7 +12,8 @@ use App\Form\LoginFormType;
 use App\Repository\CustomerRepository;
 use App\Repository\OptionsRepository;
 use App\Service\Services;
-use Doctrine\Common\Persistence\ObjectManager;
+use DateTime;
+use Doctrine\ORM\EntityManagerInterface;
 use function Sodium\add;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -29,6 +30,7 @@ class SecurityController extends AbstractController
     private $utils;
     private $adminMail = "coworking-flex@alsacedigitale.org";
     private $options;
+    private $manager;
 
     /**
      * SecurityController constructor.
@@ -37,10 +39,12 @@ class SecurityController extends AbstractController
      */
     public function __construct(
         AuthenticationUtils $utils,
-        OptionsRepository $options
+        OptionsRepository $options,
+        EntityManagerInterface $manager
     ) {
         $this->utils = $utils;
         $this->options = $options;
+        $this->manager = $manager;
     }
 
     /**
@@ -110,6 +114,10 @@ class SecurityController extends AbstractController
         );
 
         if ($this->getUser()) {
+            ($this->getUser())->setLastActivityAt(new DateTime());
+            $this->manager->persist($this->getUser());
+            $this->manager->flush();
+
             if ($this->getUser()->getRole() == 'ROLE_USER') {
                 return $this->redirectToRoute('user_home');
             } elseif ($this->getUser()->getRole() == 'ROLE_ADMIN') {
@@ -212,9 +220,11 @@ class SecurityController extends AbstractController
             $hash = $encoder->encodePassword($customer, $customer->getPassword());
             if ($customerRepository->findAll()) {
                 $customer->setPassword($hash)
+                    ->setCreatedAt(new DateTime())
                     ->setRole('ROLE_USER');
             } else {
                 $customer->setPassword($hash)
+                    ->setCreatedAt(new DateTime())
                     ->setRole('ROLE_ADMIN');
             }
 

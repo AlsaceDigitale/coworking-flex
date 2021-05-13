@@ -124,3 +124,10 @@ h1, h2, h3, h4, h5 {
     max-height: 40vh;
     overflow: auto;
 }
+
+.jumbotron label {
+    color: #158CBA;
+    font-family: Pattaya, sans-serif;
+    margin-top: 8px;
+    font-size: 18px;
+}
