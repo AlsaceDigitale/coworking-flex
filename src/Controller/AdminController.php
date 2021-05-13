@@ -5,6 +5,8 @@ namespace App\Controller;
 use App\Entity\Customer;
 use App\Entity\HalfDayAdjustment;
 use App\Form\EditCustomerType;
+use App\Entity\HomeTexts;
+use App\Entity\Options;
 use App\Form\HalfDayAdjustmentType;
 use App\Form\TermsOfUseType;
 use App\Repository\HalfDayAdjustmentRepository;
@@ -253,11 +255,16 @@ class AdminController extends AbstractController
      */
     public function text(Request $request)
     {
-        $text = $this->optionsRepository->findOneBy(
-            [
-                'label' => 'Text'
-            ]
-        );
+        $texts = $this->optionsRepository->findBy(['label' => 'Text']);
+        while (count($texts) < 3) {
+            $newText = new Options();
+            $newText->setLabel('Text')
+                ->setActive(false)
+                ->setContent('Entrez votre texte ici.');
+            $this->manager->persist($newText);
+            $this->manager->flush();
+            $texts[] = $newText;
+        }
         $place = $this->optionsRepository->findOneBy(
             [
                 'label' => 'Place'
@@ -279,8 +286,8 @@ class AdminController extends AbstractController
         $formTermsOfUse->handleRequest($request);
 
         if ($formTermsOfUse->isSubmitted() && $formTermsOfUse->isValid()) {
-            $this->om->persist($termsOfUse);
-            $this->om->flush();
+            $this->manager->persist($termsOfUse);
+            $this->manager->flush();
 
             $this->addFlash(
                 'option',
@@ -288,16 +295,30 @@ class AdminController extends AbstractController
             );
         }
 
-        $formtext = $this->createForm(TextHomeType::class, $text);
-        $formtext->handleRequest($request);
+        $homeTexts = new HomeTexts($texts[0], $texts[1], $texts[2]);
+        $formText = $this->createForm(TextHomeType::class, $homeTexts);
+        $formText->handleRequest($request);
+        if ($formText->isSubmitted() && $formText->isValid()) {
+            foreach ($homeTexts->getData() as $k => $data) {
+                if ($data['file']) {
+                    $texts[$k]->setPictureFile($data['file']);
+                }
 
-        if ($formtext->isSubmitted() && $formtext->isValid()) {
-            $this->manager->persist($text);
+                if ($texts[$k]->getContent() === $data['text']) {
+                    // https://github.com/dustin10/VichUploaderBundle/issues/8 >
+                    // Un fichier ne peut-être persistée si aucun autre champ n'a été modifié dans l'entité.
+                    // On modifie ici le texte en ajoutant un espace insécable (si le texte est inchangé),
+                    // permettant de forcer la persistance du fichier
+                    $texts[$k]->setContent($data['text'] . "&nbsp");
+                } else {
+                    $texts[$k]->setContent($data['text']);
+                }
+            }
+
             $this->manager->flush();
-
             $this->addFlash(
                 'option',
-                'Texte d\'accueil modifié avec succés'
+                'Texte d\'accueil modifié avec succès'
             );
         }
 
@@ -344,8 +365,10 @@ class AdminController extends AbstractController
         return $this->render(
             'admin/text.html.twig',
             [
-                'text' => $text,
-                'form' => $formtext->createView(),
+                'text1' => $texts[0],
+                'text2' => $texts[1],
+                'text3' => $texts[2],
+                'form' => $formText->createView(),
                 'formplace' => $formplace->createView(),
                 'formhalfday' => $formhalfday->createView(),
                 'formmonth' => $formmonth->createView(),
