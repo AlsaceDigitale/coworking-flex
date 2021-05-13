@@ -2,11 +2,14 @@
 
 namespace App\Controller;
 
+use App\Entity\CheckIn;
 use App\Entity\Customer;
+use App\Entity\ExportPeriod;
 use App\Entity\HalfDayAdjustment;
 use App\Form\EditCustomerType;
 use App\Entity\HomeTexts;
 use App\Entity\Options;
+use App\Form\ExportPeriodType;
 use App\Form\HalfDayAdjustmentType;
 use App\Form\TermsOfUseType;
 use App\Form\TextRGPDType;
@@ -27,6 +30,7 @@ use App\Form\HalfDayType;
 use App\Form\MonthType;
 use App\Form\PlaceType;
 use App\Form\PromoType;
+use App\Form\CustomerSettingStatusType;
 use App\Form\TextHomeType;
 use App\Repository\CustomerRepository;
 use App\Repository\PromoRepository;
@@ -64,8 +68,9 @@ class AdminController extends AbstractController
 
     /**
      * @Route("/admin/home", name="admin_home")
+     * @return Response
      */
-    public function adminHome()
+    public function adminHome(): Response
     {
         ($this->getUser())->setLastActivityAt(new DateTime());
         $this->manager->persist($this->getUser());
@@ -77,21 +82,71 @@ class AdminController extends AbstractController
 
     /**
      * @Route("/admin/list", name="admin_list")
+     * @param Request $request
+     * @return Response
      */
-    public function list()
+    public function list(Request $request): Response
     {
-        return $this->render(
-            'admin/list.html.twig',
-            [
-                'customers' => $this->customerRepository->findAll()
-            ]
-        );
+        $exportPeriod = new ExportPeriod();
+        $form = $this->createForm(ExportPeriodType::class, $exportPeriod);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            if ($exportPeriod->getBeginDate() >= $exportPeriod->getEndDate()) {
+                $this->addFlash('error', 'La date de fin de la période ne peut être supérieur à la date de début');
+            }
+            $users = $this->customerRepository->findAllWithCheckinWithinPeriod($exportPeriod->getBeginDate(), $exportPeriod->getEndDate());
+            $rows = [];
+            $rows[] = "Id;E-mail;Pseudo;Prénom;Nom;Numéro de téléphone;Adresse;Ville;Code Postal;Pays;Rôle;Statut;Somme des checkins";
+
+            /** @var Customer $user */
+            foreach ($users as $user) {
+                $diffSum = 0;
+                /** @var CheckIn $checkIn */
+                foreach ($user->getCheckIns()->getValues() as $checkIn) {
+                    $time = explode(':', $checkIn->getDiff()->format('H:i:s'));
+                    $diffSum += ($time[0] * 60) + ($time[1]) + ($time[2] / 60);
+                }
+                $row = [
+                    $user->getId(),
+                    $user->getMail(),
+                    $user->getUsername(),
+                    $user->getFirstname(),
+                    $user->getLastname(),
+                    $user->getPhone(),
+                    $user->getAddress(),
+                    $user->getCity(),
+                    $user->getZip(),
+                    $user->getCountry(),
+                    $user->getRole(),
+                    $user->getStatus(),
+                    (new DateTime())->setTime(floor($diffSum / 60), $diffSum % 60)->format('H:i')
+                ];
+                $rows[] = implode(';', $row);
+            }
+            $fileName = 'users_factures_' .
+                $exportPeriod->getBeginDate()->format('Y-m-d') . '_' .
+                $exportPeriod->getBeginDate()->format('Y-m-d') . '.csv';
+
+            return new Response(implode(PHP_EOL, $rows), 200, [
+                'Content-Type' => 'text/csv; charset=utf-8',
+                'Content-Disposition' => 'attachment; filename=' . $fileName,
+                'Pragma' => 'no-cache',
+                'Expires' => '0'
+            ]);
+        }
+
+        return $this->render('admin/list.html.twig', [
+            'customers' => $this->customerRepository->findAll(),
+            'form' => $form->createView()
+        ]);
     }
 
     /**
      * @Route("/admin/present", name="admin_present")
+     * @return Response
      */
-    public function present()
+    public function present(): Response
     {
         return $this->render(
             'admin/present.html.twig',
@@ -103,15 +158,13 @@ class AdminController extends AbstractController
 
     /**
      * @Route("/admin/activation", name="admin_activation")
+     * @return Response
      */
-    public function activation()
+    public function activation(): Response
     {
-        return $this->render(
-            'admin/activation.html.twig',
-            [
-                'subscriptions' => $this->subscriptionRepository->findBy(['active' => 0])
-            ]
-        );
+        return $this->render('admin/activation.html.twig', [
+            'subscriptions' => $this->subscriptionRepository->findBy(['active' => 0])
+        ]);
     }
 
     /**
@@ -119,19 +172,14 @@ class AdminController extends AbstractController
      * @param Swift_Mailer $mailer
      * @return RedirectResponse
      * @Route("/admin/activate/{id}", name="admin_activate")
+     * @return Response
      */
     public function activate(Customer $customer, Swift_Mailer $mailer): Response
     {
-        $subscription = $this->subscriptionRepository->findOneBy(
-            [
-                'customer' => $customer->getId()
-            ]
-        );
-        $promo = $this->promoRepository->findOneBy(
-            [
-                'customer' => $customer->getId()
-            ]
-        );
+        $subscription = $this->subscriptionRepository->findOneBy(['customer' => $customer->getId()
+            ]);
+        $promo = $this->promoRepository->findOneBy(['customer' => $customer->getId()
+            ]);
         if ($subscription->getActive() == 0) {
             $subscription->setActive(1);
             $promo->setCounter($promo->getCounter() + 0);
@@ -161,10 +209,11 @@ class AdminController extends AbstractController
 
     /**
      * @param $id
+     * @param Request $request
      * @return Response
      * @Route("/admin/profile/{id}", name="admin_profile")
      */
-    public function profile($id, Request $request)
+    public function profile($id, Request $request): Response
     {
         $customer = $this->customerRepository->findOneBy(['id' => $id]);
         $subscription = $this->subscriptionRepository->findOneBy(['customer' => $id]);
@@ -179,7 +228,16 @@ class AdminController extends AbstractController
 
         $customerForm = $this->createForm(EditCustomerType::class, $customer);
         $customerForm->handleRequest($request);
+
         if ($counter->isSubmitted() && $counter->isValid()) {
+            $this->manager->persist($customer);
+            $this->manager->flush();
+        }
+
+        $status = $this->createForm(CustomerSettingStatusType::class, $customer);
+        $status->handleRequest($request);
+
+        if ($status->isSubmitted() && $status->isValid()) {
             $this->manager->persist($customer);
             $this->manager->flush();
         }
@@ -197,32 +255,23 @@ class AdminController extends AbstractController
 
     /**
      * @Route("/admin/raz", name="admin_raz")
+     * @return Response
      */
-    public function raz()
+    public function raz(): Response
     {
-
         return $this->render('admin/raz.html.twig');
     }
 
     /**
      * @Route("/admin/boom", name="admin_boom")
+     * @return Response
      */
-    public function boom()
+    public function boom(): Response
     {
-
-        $customers = $this->customerRepository->findBy(
-            [
-                'role' => 'ROLE_USER'
-            ]
-        );
-
+        $customers = $this->customerRepository->findBy(['role' => 'ROLE_USER']);
 
         foreach ($customers as $customer) {
-            $subscriptions = $this->subscriptionRepository->findOneBy(
-                [
-                    'customer' => $customer->getId()
-                ]
-            );
+            $subscriptions = $this->subscriptionRepository->findOneBy(['customer' => $customer->getId()]);
             $raz = $subscriptions->setActive(0);
             $this->manager->persist($raz);
             $this->manager->flush();
@@ -236,7 +285,7 @@ class AdminController extends AbstractController
      * @return Response
      * @Route("/admin/switchrole/{id}", name="admin_switchrole")
      */
-    public function switch($id)
+    public function switch($id): Response
     {
         $customer = $this->customerRepository->find($id);
         if ($customer->getRole() == 'ROLE_USER') {
@@ -444,7 +493,6 @@ class AdminController extends AbstractController
         $days = [];
         $free = [];
         $customers = [];
-        $count_attendance = [];
         foreach ($checkins as $key => $checkin) {
             $customer = $this->customerRepository->findOneBy([
                 'role' => 'ROLE_USER',

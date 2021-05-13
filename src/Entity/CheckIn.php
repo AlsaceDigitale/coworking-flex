@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use DateTimeInterface;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -70,24 +71,24 @@ class CheckIn
         return $this->id;
     }
 
-    public function getArrival(): ?\DateTimeInterface
+    public function getArrival(): ?DateTimeInterface
     {
         return $this->arrival;
     }
 
-    public function setArrival(\DateTimeInterface $arrival): self
+    public function setArrival(DateTimeInterface $arrival): self
     {
         $this->arrival = $arrival;
 
         return $this;
     }
 
-    public function getLeaving(): ?\DateTimeInterface
+    public function getLeaving(): ?DateTimeInterface
     {
         return $this->leaving;
     }
 
-    public function setLeaving(?\DateTimeInterface $leaving): self
+    public function setLeaving(?DateTimeInterface $leaving): self
     {
         $this->leaving = $leaving;
 
@@ -106,12 +107,12 @@ class CheckIn
         return $this;
     }
 
-    public function getDiff(): ?\DateTimeInterface
+    public function getDiff(): ?DateTimeInterface
     {
         return $this->diff;
     }
 
-    public function setDiff(?\DateTimeInterface $diff): self
+    public function setDiff(?DateTimeInterface $diff): self
     {
         $this->diff = $diff;
 
