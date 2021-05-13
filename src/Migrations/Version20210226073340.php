@@ -29,7 +29,7 @@ final class Version20210226073340 extends AbstractMigration
     {
         // this down() migration is auto-generated, please modify it to your needs
         $this->abortIf($this->connection->getDatabasePlatform()->getName() !== 'mysql', 'Migration can only be executed safely on \'mysql\'.');
+        $this->addSql('ALTER TABLE customer DROP status, DROP created_at, DROP last_activity_at');
 
-        $this->addSql('DROP TABLE half_day_adjustment');
     }
 }
