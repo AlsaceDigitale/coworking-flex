@@ -321,7 +321,7 @@ class AdminController extends AbstractController
         $place = $this->optionsRepository->findOneBy(['label' => 'Place']);
         $halfday = $this->optionsRepository->findOneBy(['label' => 'HalfDay']);
         $month = $this->optionsRepository->findOneBy(['label' => 'Month']);
-        $termsOfUse = $this->optionsRepository->findOneBy(['label' => 'Terms of use']);
+        $termsOfUse = $this->optionsRepository->findOneBy(['label' => 'TermsOfUse']);
 
         if (!$rgpd) {
             dump($rgpd);
@@ -329,6 +329,14 @@ class AdminController extends AbstractController
             $rgpd->setLabel('rgpd')
                 ->setContent('Entrez votre texte ici');
             $this->manager->persist($rgpd);
+            $this->manager->flush();
+        }
+
+        if (!$termsOfUse) {
+            $termsOfUse = new Options();
+            $termsOfUse->setLabel('TermsOfUse')
+                ->setContent('Terms of Use draft');
+            $this->manager->persist($termsOfUse);
             $this->manager->flush();
         }
 
@@ -353,7 +361,6 @@ class AdminController extends AbstractController
                 if ($data['file']) {
                     $texts[$k]->setPictureFile($data['file']);
                 }
-
                 if ($texts[$k]->getContent() === $data['text']) {
                     // https://github.com/dustin10/VichUploaderBundle/issues/8 >
                     // Un fichier ne peut-être persistée si aucun autre champ n'a été modifié dans l'entité.
@@ -363,6 +370,7 @@ class AdminController extends AbstractController
                 } else {
                     $texts[$k]->setContent($data['text']);
                 }
+                $texts[$k]->setActive($data['active']);
             }
 
             $this->manager->flush();

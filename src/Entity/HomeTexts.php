@@ -61,9 +61,9 @@ class HomeTexts
 
     public function getData(): ?array {
         return [
-            ['text' => $this->firstText, 'file' => $this->firstPictureFile],
-            ['text' => $this->secondText, 'file' => $this->secondPictureFile],
-            ['text' => $this->thirdText, 'file' => $this->thirdPictureFile],
+            ['text' => $this->firstText, 'file' => $this->firstPictureFile, 'active' => $this->firstActive],
+            ['text' => $this->secondText, 'file' => $this->secondPictureFile, 'active' => $this->secondActive],
+            ['text' => $this->thirdText, 'file' => $this->thirdPictureFile, 'active' => $this->thirdActive],
         ];
     }
 

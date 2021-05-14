@@ -18,6 +18,7 @@ class TextHomeType extends AbstractType
         $builder
             ->add('firstText', CKEditorType::class)
             ->add('firstActive', CheckboxType::class, [
+                'required' => false,
                 'label' => 'Activer le premier text'
             ])
             ->add('firstPictureFile', FileType::class, [
@@ -26,6 +27,7 @@ class TextHomeType extends AbstractType
             ])
             ->add('secondText', CKEditorType::class)
             ->add('secondActive', CheckboxType::class, [
+                'required' => false,
                 'label' => 'Activer le deuxième text'
             ])
             ->add('secondPictureFile', FileType::class, [
@@ -34,6 +36,7 @@ class TextHomeType extends AbstractType
             ])
             ->add('thirdText', CKEditorType::class)
             ->add('thirdActive', CheckboxType::class, [
+                'required' => false,
                 'label' => 'Activer le troisième text'
             ])
             ->add('thirdPictureFile', FileType::class, [

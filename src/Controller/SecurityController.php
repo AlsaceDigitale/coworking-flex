@@ -150,7 +150,7 @@ class SecurityController extends AbstractController
      * @Route("/terms-of-use", name="security_terms_of_use")
      */
     public function termsOfUse(): Response {
-        $termsOfUse = $this->options->findOneBy(['label' => 'Terms of use']);
+        $termsOfUse = $this->options->findOneBy(['label' => 'TermsOfUse']);
 
         return $this->render('security/showOption.html.twig', [
             'option' => $termsOfUse,
