@@ -63,7 +63,7 @@ class UserController extends AbstractController
 
         $subscription = $this->subscriptionRepository->findOneBy(['customer' => $this->getUser()]);
         $checkin = $this->checkInRepository->findOneBy(['customer' => $this->getUser(), 'leaving' => null]);
-        $termsOfUseText = $this->optionsRepository->findOneBy(['label' => 'Terms of use']);
+        $termsOfUseText = $this->optionsRepository->findOneBy(['label' => 'TermsOfUse']);
         $todayCheckedIn = $this->checkInRepository->findBy([
             'customer' => $this->getUser(),
             'arrivalDate' => (new \DateTime())->format('Y-m-d')
