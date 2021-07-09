@@ -12,7 +12,7 @@
         "ext-iconv": "*",
         "doctrine/doctrine-fixtures-bundle": "^3.1",
         "friendsofsymfony/ckeditor-bundle": "^2.0",
-        "phpro/grumphp": "^0.14.2",
+        "phpro/grumphp": "^0.18.1",
         "sensio/framework-extra-bundle": "^5.2",
         "squizlabs/php_codesniffer": "^3.4",
         "symfony/asset": "4.2.*",
