@@ -84,7 +84,8 @@
     "extra": {
       "paas": {
           "compile": [
-              "php bin/console ckeditor:install"
+              "php bin/console ckeditor:install",
+              "php bin/console assets:install public"
           ],
         "engines": {
           "nginx": "1.15.8"
