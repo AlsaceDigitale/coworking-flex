@@ -124,6 +124,16 @@ class Customer implements UserInterface
      */
     private $status;
 
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $createdAt;
+
+    /**
+     * @ORM\Column(type="datetime", nullable=true)
+     */
+    private $lastActivityAt;
+
     public function __construct()
     {
         $this->subscriptions = new ArrayCollection();
@@ -394,6 +404,42 @@ class Customer implements UserInterface
     {
         $this->status = $status;
 
+        return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getLastActivityAt()
+    {
+        return $this->lastActivityAt;
+    }
+
+    /**
+     * @param mixed $lastActivityAt
+     * @return Customer
+     */
+    public function setLastActivityAt($lastActivityAt): self
+    {
+        $this->lastActivityAt = $lastActivityAt;
+        return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCreatedAt()
+    {
+        return $this->createdAt;
+    }
+
+    /**
+     * @param mixed $createdAt
+     * @return Customer
+     */
+    public function setCreatedAt($createdAt): self
+    {
+        $this->createdAt = $createdAt;
         return $this;
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Controller;
 
-use App\Entity\Customer;
 use App\Form\CustomerSettingsAccountType;
 use App\Form\CustomerSettingsPasswordType;
 use App\Form\CustomerSettingsProfileType;
@@ -11,7 +10,7 @@ use App\Repository\OptionsRepository;
 use App\Repository\SubscriptionRepository;
 use App\Repository\HalfDayAdjustmentRepository;
 use App\Service\Services;
-use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,7 +18,6 @@ use Symfony\Component\Routing\Annotation\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Security;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
-use Symfony\Component\Validator\Constraints\DateTime;
 
 /**
  * Class UserController
@@ -31,25 +29,48 @@ class UserController extends AbstractController
 {
     private $subscriptionRepository;
     private $checkInRepository;
+    private $halfDayAdjustmentRepository;
+    private $optionsRepository;
+    private $manager;
 
     public function __construct(
         SubscriptionRepository $subscriptionRepository,
         CheckInRepository $checkInRepository,
-        HalfDayAdjustmentRepository $halfDayAdjustmentRepository
+        HalfDayAdjustmentRepository $halfDayAdjustmentRepository,
+        OptionsRepository $optionsRepository,
+        EntityManagerInterface $manager
     ) {
         $this->subscriptionRepository = $subscriptionRepository;
         $this->checkInRepository = $checkInRepository;
         $this->halfDayAdjustmentRepository = $halfDayAdjustmentRepository;
+        $this->optionsRepository = $optionsRepository;
+        $this->manager = $manager;
     }
 
     /**
      * @Route("/", name="user_home")
      * @Security("is_fully_authenticated()")
+     * @param Services $services
+     * @return Response
      */
-    public function home(Services $services)
+    public function home(Services $services): Response
     {
+        $hasAlreadyCheckedIn = false;
+
+        ($this->getUser())->setLastActivityAt(new \DateTime());
+        $this->manager->persist($this->getUser());
+        $this->manager->flush();
+
         $subscription = $this->subscriptionRepository->findOneBy(['customer' => $this->getUser()]);
         $checkin = $this->checkInRepository->findOneBy(['customer' => $this->getUser(), 'leaving' => null]);
+        $termsOfUseText = $this->optionsRepository->findOneBy(['label' => 'TermsOfUse']);
+        $todayCheckedIn = $this->checkInRepository->findBy([
+            'customer' => $this->getUser(),
+            'arrivalDate' => (new \DateTime())->format('Y-m-d')
+        ]);
+        if ($todayCheckedIn && count($todayCheckedIn)) {
+            $hasAlreadyCheckedIn = true;
+        }
 
         if ($checkin) {
             $arrival = $checkin->getArrival();
@@ -59,6 +80,7 @@ class UserController extends AbstractController
             return $this->render(
                 'user/home.html.twig',
                 [
+                    'hasAlreadyCheckedIn' => $hasAlreadyCheckedIn,
                     'subscription' => $subscription,
                     'checkin' => $checkin,
                     'place' => $services->countPlaces(),
@@ -70,6 +92,8 @@ class UserController extends AbstractController
         return $this->render(
             'user/home.html.twig',
             [
+                'termsOfUseText' => $termsOfUseText,
+                'hasAlreadyCheckedIn' => $hasAlreadyCheckedIn,
                 'subscription' => $subscription,
                 'checkin' => $checkin,
                 'place' => $services->countPlaces()
@@ -89,14 +113,12 @@ class UserController extends AbstractController
     /**
      * @Route("/account/settings", name="user_account_settings", methods="GET|POST")
      * @param Request                      $request
-     * @param ObjectManager                $manager
      * @param AuthenticationUtils          $utils
      * @param UserPasswordEncoderInterface $encoder
      * @return Response
      */
     public function accountSettings(
         Request $request,
-        ObjectManager $manager,
         AuthenticationUtils $utils,
         UserPasswordEncoderInterface $encoder
     ):Response {
@@ -104,7 +126,7 @@ class UserController extends AbstractController
         $formProfile->handleRequest($request);
 
         if ($formProfile->isSubmitted() && $formProfile->isValid()) {
-            $manager->flush();
+            $this->manager->flush();
             $this->addFlash(
                 'CustomerSettingsValid',
                 'Modifications enregistrées avec succès.'
@@ -125,7 +147,7 @@ class UserController extends AbstractController
             if ($encoder->isPasswordValid($this->getUser(), $formPassword->get('old_password')->getData())) {
                 $this->getUser()->setPassword($encoder->encodePassword($this->getUser(), $formPassword
                     ->get('password')->getData()));
-                $manager->flush();
+                $this->manager->flush();
                 $this->addFlash(
                     'CustomerSettingsValid',
                     'Modifications enregistrées avec succès.'
@@ -144,7 +166,7 @@ class UserController extends AbstractController
         $formAccount->handleRequest($request);
 
         if ($formAccount->isSubmitted() && $formAccount->isValid()) {
-            $manager->flush();
+            $this->manager->flush();
             $this->addFlash(
                 'CustomerSettingsValid',
                 'Modifications enregistrées avec succès.'
@@ -238,7 +260,7 @@ class UserController extends AbstractController
             $Mois_arrivee_num = $Arrivee->format('m');
             $Annee_arrivee_num = $Arrivee->format('Y');
             $Heure_arrivee = $Arrivee->format('H:i:s');
-            
+
             $Depart = $checkin->getLeaving();
             if($Depart != null)
             {
@@ -259,7 +281,7 @@ class UserController extends AbstractController
 
             $Demijournees = $checkin->getHalfDay();
             $Demijournees_offertes = $checkin->getFree();
-            
+
             $Difference_depart_arrivee = $checkin->getDiff();
             $all_checkins[$line][] = [
                 'jour_arrivee_str' => $Jour_arrivee_str,
@@ -291,7 +313,7 @@ class UserController extends AbstractController
                 }
                 else
                 {
-                   $all_days[$key] = $day['demi_journees'] - $day['demi_journees_free']; 
+                    $all_days[$key] = $day['demi_journees'] - $day['demi_journees_free'];
                 }
             }
         }

@@ -12,7 +12,7 @@
         "ext-iconv": "*",
         "doctrine/doctrine-fixtures-bundle": "^3.1",
         "friendsofsymfony/ckeditor-bundle": "^2.0",
-        "phpro/grumphp": "^0.14.2",
+        "phpro/grumphp": "^0.18.1",
         "sensio/framework-extra-bundle": "^5.2",
         "squizlabs/php_codesniffer": "^3.4",
         "symfony/asset": "4.2.*",
@@ -32,7 +32,8 @@
         "symfony/twig-bundle": "4.2.*",
         "symfony/validator": "4.2.*",
         "symfony/web-link": "4.2.*",
-        "symfony/yaml": "4.2.*"
+        "symfony/yaml": "4.2.*",
+        "vich/uploader-bundle": "1.11.0"
     },
     "require-dev": {
         "symfony/debug-pack": "*",
@@ -82,6 +83,10 @@
     },
     "extra": {
       "paas": {
+          "compile": [
+              "php bin/console ckeditor:install",
+              "php bin/console assets:install public"
+          ],
         "engines": {
           "nginx": "1.15.8"
         },

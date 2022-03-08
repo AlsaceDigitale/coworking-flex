@@ -12,7 +12,11 @@ use App\Form\LoginFormType;
 use App\Repository\CustomerRepository;
 use App\Repository\OptionsRepository;
 use App\Service\Services;
-use Doctrine\Common\Persistence\ObjectManager;
+use DateTime;
+use Doctrine\ORM\EntityManagerInterface;
+use Swift_Mailer;
+use Swift_Message;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use function Sodium\add;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -29,6 +33,7 @@ class SecurityController extends AbstractController
     private $utils;
     private $adminMail = "coworking-flex@alsacedigitale.org";
     private $options;
+    private $manager;
 
     /**
      * SecurityController constructor.
@@ -37,36 +42,34 @@ class SecurityController extends AbstractController
      */
     public function __construct(
         AuthenticationUtils $utils,
-        OptionsRepository $options
+        OptionsRepository $options,
+        EntityManagerInterface $manager
     ) {
         $this->utils = $utils;
         $this->options = $options;
+        $this->manager = $manager;
     }
 
     /**
      * @Route("/", name="security_home")
-     * @param Request                      $request
-     * @param UserPasswordEncoderInterface $encoder
-     * @param Services                     $services
-     * @param \Swift_Mailer                $mailer
-     * @param CustomerRepository           $customerRepository
+     * @param Request      $request
+     * @param Services     $services
+     * @param Swift_Mailer $mailer
      * @return Response
      */
     public function index(
         Request $request,
         Services $services,
-        \Swift_Mailer $mailer
-    ):Response {
+        Swift_Mailer $mailer
+    ): Response {
 
         //!!!!!!!!!!!!!!!!!!!!   forgot password   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         $passForm = $this->createForm(ForgotPasswordTypeMail::class);
         $forgotForm = $request->request->get('forgot_password_type_mail');
-        $customer = $this->getDoctrine()->getRepository(Customer::class)->findOneBy(
-            [
-                'mail' => $forgotForm['mail']
-            ]
-        );
+        $customer = $this->getDoctrine()->getRepository(Customer::class)->findOneBy([
+            'mail' => $forgotForm['mail']
+        ]);
         $passForm->handleRequest($request);
 
         if ($passForm->isSubmitted() && $passForm->isValid()) {
@@ -75,18 +78,15 @@ class SecurityController extends AbstractController
                 $token = $customer->getToken();
                 $this->getDoctrine()->getManager()->flush();
 
-
-                $message = (new \Swift_Message('Modification de votre mot de passe'))
+                $message = (new Swift_Message('Modification de votre mot de passe'))
                     ->setFrom($this->adminMail)
                     ->setTo($forgotForm['mail'])
                     ->setBody(
                         $this->renderView(
-                            'security/forgotPasswordMail.html.twig',
-                            [
+                            'security/forgotPasswordMail.html.twig', [
                                 'name' => $customer->getFirstname(),
                                 'pass' => $token
-                            ]
-                        ),
+                            ]),
                         'text/html'
                     );
                 $mailer->send($message);
@@ -103,13 +103,18 @@ class SecurityController extends AbstractController
             }
         }
         //!!!!!!!!!!!!!!!!!!!!   récupérer le texte d'acceuil   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        $option = $this->options->findOneBy(
+        $options = $this->options->findBy(
             [
-                'label' => 'Text'
+                'label' => 'Text',
+                'active' => true
             ]
         );
 
         if ($this->getUser()) {
+            ($this->getUser())->setLastActivityAt(new DateTime());
+            $this->manager->persist($this->getUser());
+            $this->manager->flush();
+
             if ($this->getUser()->getRole() == 'ROLE_USER') {
                 return $this->redirectToRoute('user_home');
             } elseif ($this->getUser()->getRole() == 'ROLE_ADMIN') {
@@ -124,9 +129,33 @@ class SecurityController extends AbstractController
                 'last_username' => $this->utils->getLastUsername(),
                 'error' => $this->utils->getLastAuthenticationError(),
                 'place' => $services->countPlaces(),
-                'text' => $option
+                'texts' => $options
             ]
         );
+    }
+
+    /**
+     * @Route("/rgpd", name="security_rgpd")
+     */
+    public function rgpd(): Response {
+        $rgpd = $this->options->findOneBy(['label' => 'rgpd']);
+
+        return $this->render('security/showOption.html.twig', [
+            'option' => $rgpd,
+            'title' => 'Les règles RGPD'
+        ]);
+    }
+
+    /**
+     * @Route("/terms-of-use", name="security_terms_of_use")
+     */
+    public function termsOfUse(): Response {
+        $termsOfUse = $this->options->findOneBy(['label' => 'TermsOfUse']);
+
+        return $this->render('security/showOption.html.twig', [
+            'option' => $termsOfUse,
+            'title' => 'Les conditions d\'utilisation'
+        ]);
     }
 
     /**
@@ -186,14 +215,14 @@ class SecurityController extends AbstractController
      * @Route("/create", name="user_create", condition="request.isXmlHttpRequest()")
      * @param Request                      $request
      * @param UserPasswordEncoderInterface $encoder
-     * @param \Swift_Mailer                $mailer
+     * @param Swift_Mailer                 $mailer
      * @param CustomerRepository           $customerRepository
-     * @return \Symfony\Component\HttpFoundation\RedirectResponse|Response
+     * @return RedirectResponse|Response
      */
     public function create(
         Request $request,
         UserPasswordEncoderInterface $encoder,
-        \Swift_Mailer $mailer,
+        Swift_Mailer $mailer,
         CustomerRepository $customerRepository
     ) {
 
@@ -201,9 +230,7 @@ class SecurityController extends AbstractController
         $form = $this->createForm(
             CustomerType::class,
             $customer,
-            [
-                'action' => $this->generateUrl($request->get('_route'))
-            ]
+            ['action' => $this->generateUrl($request->get('_route'))]
         );
         $registration_man = $request->request->get('customer');
         $form->handleRequest($request);
@@ -212,9 +239,11 @@ class SecurityController extends AbstractController
             $hash = $encoder->encodePassword($customer, $customer->getPassword());
             if ($customerRepository->findAll()) {
                 $customer->setPassword($hash)
+                    ->setCreatedAt(new DateTime())
                     ->setRole('ROLE_USER');
             } else {
                 $customer->setPassword($hash)
+                    ->setCreatedAt(new DateTime())
                     ->setRole('ROLE_ADMIN');
             }
 
@@ -234,15 +263,12 @@ class SecurityController extends AbstractController
 
             //  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  Mail pour prevenir le user lors d'une inscription   !!!!!!!!!
 
-            $message = (new \Swift_Message('Bienvenue sur l\'espace flex'))
+            $message = (new Swift_Message('Bienvenue sur l\'espace flex'))
                 ->setFrom($this->adminMail)
                 ->setTo($registration_man['mail'])
                 ->setBody(
                     $this->renderView(
-                        'security/registrationMail.html.twig',
-                        [
-                            'registration_man' => $registration_man
-                        ]
+                        'security/registrationMail.html.twig', ['registration_man' => $registration_man]
                     ),
                     'text/html'
                 );
@@ -250,16 +276,12 @@ class SecurityController extends AbstractController
 
             //  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!  Mail pour prevenir l'admin lors d'une inscription   !!!!!!!!!!
 
-            $message2 = (new \Swift_Message('Nouvel utilisateur sur l\'espace flex'))
+            $message2 = (new Swift_Message('Nouvel utilisateur sur l\'espace flex'))
                 ->setFrom($this->adminMail)
                 ->setTo(getenv('ADMIN_MAIL') ?: $this->adminMail)
-                ->setBody(
-                    $this->renderView(
-                        'security/registrationMailAdmin.html.twig',
-                        [
-                            'registration_man' => $registration_man
-                        ]
-                    ),
+                ->setBody($this->renderView('security/registrationMailAdmin.html.twig', [
+                        'registration_man' => $registration_man
+                    ]),
                     'text/html'
                 );
 
@@ -272,12 +294,9 @@ class SecurityController extends AbstractController
 
             return new Response('success');
         }
-        return $this->render(
-            'security/_create.html.twig',
-            [
-                'form' => $form->createView()
-            ]
-        );
+        return $this->render('security/_create.html.twig', [
+            'form' => $form->createView()
+        ]);
     }
 
     /**
@@ -291,7 +310,7 @@ class SecurityController extends AbstractController
 
     /**
      * @Route("/login", name="security_login")
-     * @return \Symfony\Component\HttpFoundation\RedirectResponse
+     * @return RedirectResponse
      */
     public function login()
     {
@@ -313,7 +332,7 @@ class SecurityController extends AbstractController
 
     /**
      * @Route("/role", name="security_role")
-     * @return \Symfony\Component\HttpFoundation\RedirectResponse
+     * @return RedirectResponse
      */
     public function roles()
     {

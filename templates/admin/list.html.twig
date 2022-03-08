@@ -4,10 +4,18 @@
 
 {% block stylesheets %}
     <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.19/css/jquery.dataTables.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" integrity="sha512-mSYUmp1HYZDFaVKK//63EcZq4iFWFjxSL+Z3T/aCt4IO9Cejm03q3NKKYN6pFQzY0SBOr8h+eCIAZHPXcpZaNw==" crossorigin="anonymous" />
 {% endblock %}
 
 {% block body %}
     <div class="container">
+        {% for messages in app.flashes('error') %}
+            <div class="alert alert-dismissible alert-error">
+                <button class="close" type="button" data-dismiss="alert">&times;</button>
+                <strong>{{ messages }}</strong>
+            </div>
+        {% endfor %}
+
         <h1 class="text-primary" style="text-align: center">Liste des personnes inscrites</h1>
 
         <a href="{{ path('admin_home') }}" class="btn btn-primary btn-lg active mb-5" role="button" aria-pressed="true">Retour</a>
@@ -22,6 +30,8 @@
                 <th>Statut</th>
                 <th>Société</th>
                 <th>Role</th>
+                <th>Date de création</th>
+                <th>Dernière activité</th>
                 <th>Profil</th>
             </tr>
             </thead>
@@ -29,44 +39,82 @@
 
             {% for customer in customers %}
 
-            <tr align="center">
+                <tr align="center">
 
-                <td>{{ customer.lastname }}</td>
-                <td>{{ customer.firstname }}</td>
-                <td>{{ customer.username }}</td>
-                <td>{{ customer.mail }}</td>
-                <td>{% if customer.status is null or customer.status is empty %} - {% else %} {{ customer.status }} {% endif %}</td>
-                <td>{{ customer.society }}</td>
-                <td>{% if customer.role == 'ROLE_USER' %}
-                        Utilisateur
-                    {% else %}
-                        Administrateur
-                    {% endif %}
-                </td>
-                <td>
-                    <a href="{{ path('admin_profile', {'id': customer.id }) }}" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Voir le profil</a>
-                </td>
+                    <td>{{ customer.lastname }}</td>
+                    <td>{{ customer.firstname }}</td>
+                    <td>{{ customer.username }}</td>
+                    <td>{{ customer.mail }}</td>
+                    <td>{% if customer.status is null or customer.status is empty %} - {% else %} {{ customer.status }} {% endif %}</td>
+                    <td>{{ customer.society }}</td>
+                    <td>{% if customer.role == 'ROLE_USER' %}
+                            Utilisateur
+                        {% else %}
+                            Administrateur
+                        {% endif %}
+                    </td>
+                    <td title="{% if customer.lastActivityAt is null %}-{% else %}{{ customer.createdAt | date('H:i:s') }}{% endif %}">
+                        {% if customer.createdAt is null %}-{% else %}{{ customer.createdAt | date('d-m-Y') }}{% endif %}
+                    </td>
+                    <td title="{% if customer.lastActivityAt is null %}-{% else %}{{ customer.lastActivityAt | date('H:i:s') }}{% endif %}">
+                        {% if customer.lastActivityAt is null %}-{% else %}{{ customer.lastActivityAt | date('d-m-Y') }}{% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ path('admin_profile', {'id': customer.id }) }}" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Voir le profil</a>
+                    </td>
 
-            </tr>
+                </tr>
 
             {% endfor %}
-
-
-
 
             </tbody>
         </table>
 
-        <a href="{{ path('admin_home') }}" class="btn btn-primary btn-lg active mb-5" role="button" aria-pressed="true">Retour</a>
+        <div class="d-flex flex-row mb-5">
+            <a href="{{ path('admin_home') }}" class="btn btn-primary btn-lg active" role="button" aria-pressed="true">Retour</a>
+            <button class="ml-2 btn btn-success btn-lg active" data-toggle="modal" data-target="#modal_export">Exporter les données</button>
+        </div>
     </div>
 
 
-
+    <div class="modal fade" id="modal_export">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title text-primary">Exporter les données utilisateur</h5>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Fermer">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="container">
+                    <div class="modal-body registration text-primary">
+                        {{ form_start(form) }}
+                            <div class="d-flex flex-row">
+                                <div class="mx-3 flex-grow-1">{{ form_row(form.beginDate) }}</div>
+                                <div class="mx-3 flex-grow-1">{{ form_row(form.endDate) }}</div>
+                            </div>
+                            <button class="mx-3 mt-4 btn btn-primary active" type="submit">Exporter les données</button>
+                        {{ form_end(form) }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block javascripts %}
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.19/js/jquery.dataTables.js"></script>
     <script type="text/javascript" charset="utf8" src="https://cdn.datatables.net/1.10.18/js/dataTables.bootstrap4.min.js"></script>
     <script type="text/javascript" src="../../assets/js/datatable.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js" integrity="sha512-T/tUfKSV1bihCnd+MxKD0Hm1uBBroVYBOYSk1knyvQ9VyZJpc/ALb4P0r6ubwVPSGB2GvjeoMAJJImBG12TiaQ==" crossorigin="anonymous"></script>
+
+    <script>
+        $(document).ready(function() {
+            // you may need to change this code if you are not using Bootstrap Datepicker
+            $('.js-datepicker').datepicker({
+                format: 'yyyy-mm-dd'
+            });
+        });
+    </script>
 {% endblock %}
 

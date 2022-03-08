@@ -3,9 +3,13 @@
 namespace App\Entity;
 
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\Validator\Constraints as Assert;
+use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
 /**
  * @ORM\Entity(repositoryClass="App\Repository\OptionsRepository")
+ * @Vich\Uploadable()
  */
 class Options
 {
@@ -22,7 +26,7 @@ class Options
     private $label;
 
     /**
-     * @ORM\Column(type="string")
+     * @ORM\Column(type="text")
      */
     private $content;
 
@@ -30,6 +34,18 @@ class Options
      * @ORM\Column(type="boolean", nullable=true)
      */
     private $active;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     */
+    private $picturePath;
+
+    /**
+     * @var File|null
+     * @Vich\UploadableField(mapping="text_image", fileNameProperty="picturePath")
+     * @Assert\File(mimeTypes={"image/png", "image/jpeg"})
+     */
+    private $pictureFile;
 
     public function getId(): ?int
     {
@@ -69,6 +85,36 @@ class Options
     {
         $this->active = $active;
 
+        return $this;
+    }
+
+    public function getPicturePath(): ?string
+    {
+        return $this->picturePath;
+    }
+
+    public function setPicturePath(?string $picturePath): self
+    {
+        $this->picturePath = $picturePath;
+
+        return $this;
+    }
+
+    /**
+     * @return File|null
+     */
+    public function getPictureFile(): ?File
+    {
+        return $this->pictureFile;
+    }
+
+    /**
+     * @param File|null $pictureFile
+     * @return Options
+     */
+    public function setPictureFile(?File $pictureFile): self
+    {
+        $this->pictureFile = $pictureFile;
         return $this;
     }
 }

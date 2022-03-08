@@ -1,0 +1,17 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}
+    {{ title }}
+{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <h1 class="text-primary">{{ title }}</h1>
+        <div class="mt-4">
+            {% if option %}
+                {{ option.content | raw }}
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}
+
